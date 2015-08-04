@@ -1,0 +1,19 @@
+{
+  "name": "catalog-node",
+  "version": "0.0.0",
+  "type": "app",
+  "dependencies": {
+    "sequelize": "3.5.1",
+    "lodash": "3.10.0",
+    "sqlite3": "3.0.9",
+    "express": "4.13.3"
+	},
+	"devDependencies": {
+  },
+	"engines": {
+		"node": "0.10.32"
+	},
+	"scripts": {
+		"start": "make start"
+	}
+}
