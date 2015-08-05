@@ -2,6 +2,11 @@
   <div class="col-md-3">
     <h3>Categories</h3>
     <ul>
+      <li ng-repeat="category in categories">
+        <a href="" ng-click="showCat(category.id)">
+          {{category.name}}
+        </a>
+      </li>
     </ul>
   </div>
   <div class="col-md-9">
@@ -9,17 +14,16 @@
     <!--     <a class="body-bold" href="{{url_for('item_new')}}"> -->
     <!--   Add item -->
     <!-- </a> -->
-    <h3>Latest Items</h3>
+    <h3>{{items_title}}</h3>
     <ul>
-  <!--       <li> -->
-  <!--   <a href="{{url_for('item_detail', category_name=item.category.name, item_title=item.title)}}"> -->
-  <!--     {{item.title}} -->
-  <!--   </a> -->
-  <!--   <span> -->
-  <!--     ({{item.category.name}}) -->
-  <!--   </span> -->
-  <!-- </li> -->
-
+      <li ng-repeat="item in items">
+        <a href="#/catalog/{{getCatName(item.category_id)}}/{{item.title}}">
+          {{item.title}}
+        </a>
+        <span>
+          ({{ getCatName(item.category_id) }})
+        </span>
+      </li>
     </ul>
   </div>
 </div>

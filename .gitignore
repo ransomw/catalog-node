@@ -1,4 +1,4 @@
 *~
 node_modules/
-core/client/js/vendor/
+core/client/js/vendor/bower/
 catalog.db

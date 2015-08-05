@@ -1,7 +1,8 @@
 require.config({
   paths: {
-    angular: 'vendor/angular/angular',
-    angularRoute: 'vendor/angular-route/angular-route'
+    angular: 'vendor/bower/angular/angular',
+    angularRoute: 'vendor/bower/angular-route/angular-route',
+    superagent: 'vendor/superagent-1.3.0'
   },
   baseUrl: 'static/js',
   shim: {
@@ -14,6 +15,8 @@ require.config({
 });
 
 window.name = "NG_DEFER_BOOTSTRAP!";
+
+// todo: look into reverse routing (like flask's url_for) in angular
 
 require([
   'angular',
@@ -33,8 +36,15 @@ require([
        function($routeProvider) {
          $routeProvider
            .when('/', {
-             templateUrl: '/static/partials/home.html',
+             templateUrl: CONST.PARTIAL_BASE + 'home.html',
              controller: 'HomeCtrl'
+           })
+         // todo: be sure to place items url before here
+         //       if rewriting the home controller to handle
+         //       a url scheme more like the python client
+           .when('/catalog/:catName/:itemName', {
+             templateUrl: CONST.PARTIAL_BASE + 'item.html',
+             controller: 'RItemCtrl' // R for Read
            })
            .otherwise({
              redirectTo: '/'

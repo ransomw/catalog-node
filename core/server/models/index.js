@@ -19,7 +19,7 @@ var Category = sqlize.define('Category', {
 
 var Item = sqlize.define('Item', {
   id: {type: Sqlize.INTEGER, primaryKey: true},
-  title: {type: Sqlize.STRING(80), allowNull: false},
+  title: {type: Sqlize.STRING(80), allowNull: false, unique: true},
   description: {type: Sqlize.STRING(250), allowNull: false},
   category_id: {
     type: Sqlize.INTEGER,
