@@ -4,9 +4,17 @@ define([
   'superagent'
 ], function (angular, CONST, request) {
 
+
+  var ENDPOINTS = {
+    categories: '/api/categories',
+    items: '/api/items'
+  };
+
+  // todo: check for error in superagent callbacks
+  // todo: replace throws with information in the UI
+
   var controllers = angular.module(
     CONST.APP_NAME+'.controllers', []);
-
 
   // todo: nested views
   // todo: custom filter for items
@@ -48,7 +56,7 @@ define([
         ].join(' ');
       };
 
-      request.get('/api/categories')
+      request.get(ENDPOINTS.categories)
         .accept('json')
         .end(function (err, res) {
           $scope.$apply(function () {
@@ -56,7 +64,7 @@ define([
           });
         });
 
-      request.get('/api/items')
+      request.get(ENDPOINTS.items)
         .accept('json')
         .end(function (err, res) {
           items = res.body.sort(function (i1, i2) {
@@ -74,7 +82,33 @@ define([
   controllers.controller('RItemCtrl', [
     '$scope', '$routeParams',
     function RItemCtrl($scope, $routeParams) {
-      debugger;
+      var cat_name = $routeParams.catName;
+      var item_title = $routeParams.itemTitle;
+      var item;
+
+      // todo: use promises rather than nested callbacks
+      request.get(ENDPOINTS.categories)
+        .accept('json')
+        .query({name: cat_name})
+        .end(function (err, res) {
+          if (res.body.length !== 1) {
+            throw new Error("expected exactly one category");
+          }
+          var cat = res.body[0];
+          request.get(ENDPOINTS.items)
+            .accept('json')
+            .query({title: item_title,
+                    category_id: cat.id})
+            .end(function (err, res) {
+              if (res.body.length !== 1) {
+                throw new Error("expected exactly one item");
+              }
+              item = res.body[0];
+              $scope.$apply(function () {
+                $scope.item = item;
+              });
+            });
+        });
     }]);
 
 });
