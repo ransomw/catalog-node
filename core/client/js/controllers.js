@@ -16,6 +16,14 @@ define([
   var controllers = angular.module(
     CONST.APP_NAME+'.controllers', []);
 
+
+  controllers.controller('HeaderCtrl', [
+    '$scope', 'loginProvider',
+    function HeaderCtrl($scope, loginProvider) {
+      $scope.logged_in = loginProvider.logged_in;
+    }]);
+
+
   // todo: nested views
   // todo: custom filter for items
   // todo: service/factory for data
@@ -61,21 +69,24 @@ define([
         .end(function (err, res) {
           $scope.$apply(function () {
             $scope.categories = res.body;
+            // ensure categories populated before items
+            // since we need to get category name before displaying
+            // item info in the view
+            request.get(ENDPOINTS.items)
+              .accept('json')
+              .end(function (err, res) {
+                items = res.body.sort(function (i1, i2) {
+                  var t1 = new Date(i1.updatedAt);
+                  var t2 = new Date(i2.updatedAt);
+                  return t1.getTime() - t2.getTime();
+                });
+                $scope.$apply(function () {
+                  $scope.items = items;
+                });
+              });
           });
         });
 
-      request.get(ENDPOINTS.items)
-        .accept('json')
-        .end(function (err, res) {
-          items = res.body.sort(function (i1, i2) {
-            var t1 = new Date(i1.updatedAt);
-            var t2 = new Date(i2.updatedAt);
-            return t1.getTime() - t2.getTime();
-          });
-          $scope.$apply(function () {
-            $scope.items = items;
-          });
-        });
     }]);
 
 

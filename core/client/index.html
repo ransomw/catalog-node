@@ -1,4 +1,6 @@
 <!DOCTYPE html>
+<!-- todo: make this a template and remove duplicate urls
+     between here and the routing defined in javascript -->
 <html lang="en" ng-app="node-catalog">
 <head>
     <meta charset="utf-8">
@@ -13,7 +15,8 @@
 </head>
 <body>
 
-  <nav class="navbar navbar-fixed-top">
+  <nav class="navbar navbar-fixed-top"
+       ng-controller="HeaderCtrl">
     <div class="container">
       <div class="navbar-header">
         <button type="button" class="navbar-toggle collapsed"
@@ -31,12 +34,19 @@
          id="navbar"
          class="navbar-collapse collapse">
         <ul class="nav navbar-nav navbar-right">
-          <!-- todo: use ng-show/ng-hide on these li elements -->
-          <li>
+          <li ng-hide="logged_in()">
             <p class="navbar-btn">
-              <a href="#"
+              <a href="/login"
                  class="btn">
                 Login
+              </a>
+            </p>
+          </li>
+          <li ng-show="logged_in()">
+            <p class="navbar-btn">
+              <a href="/logout"
+                 class="btn">
+                Logout
               </a>
             </p>
           </li>

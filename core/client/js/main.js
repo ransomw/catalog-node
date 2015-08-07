@@ -22,13 +22,15 @@ require([
   'angular',
   'constants',
   'angularRoute',
-  'controllers'
+  'controllers',
+  'services'
 ], function(angular, CONST) {
 
   angular.element(document).ready(function () {
     var catalog_app = angular.module(CONST.APP_NAME, [
       'ngRoute',
-      CONST.APP_NAME+'.controllers'
+      CONST.APP_NAME + '.controllers',
+      CONST.APP_NAME + '.services'
     ]);
 
     catalog_app.config(

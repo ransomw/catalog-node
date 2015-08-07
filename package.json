@@ -6,7 +6,9 @@
     "sequelize": "3.5.1",
     "lodash": "3.10.0",
     "sqlite3": "3.0.9",
-    "express": "4.13.3"
+    "express": "4.13.3",
+    "express-session": "1.11.3",
+    "body-parser": "1.13.3"
 	},
 	"devDependencies": {
   },
