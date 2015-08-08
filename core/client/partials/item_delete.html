@@ -1,0 +1,20 @@
+<div class="container">
+  <div class="row">
+    <div class="col-md-3">
+      <h3>Delete item</h3>
+      <p>
+        Are you sure you want to delete?
+      </p>
+      <form>
+        <!-- todo: crsf -->
+        <!-- <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"> -->
+        <button ng-click="delItem()"
+                ng-disabled="loading"
+                class="btn">
+          Submit
+        </button>
+      </form>
+    </div>
+    <div class="col-md-9"></div>
+  </div>
+</div>

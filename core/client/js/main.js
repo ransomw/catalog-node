@@ -51,6 +51,10 @@ require([
              templateUrl: CONST.PARTIAL_BASE + 'item_add_edit.html',
              controller: 'CUItemCtrl' // C for Create, U for Update
            })
+           .when('/catalog/:title/delete', {
+             templateUrl: CONST.PARTIAL_BASE + 'item_delete.html',
+             controller: 'DItemCtrl' // D for Delete
+           })
          // todo: be sure to place items url before here
          //       if rewriting the home controller to handle
          //       a url scheme more like the python client

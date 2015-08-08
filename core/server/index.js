@@ -186,6 +186,9 @@ app.post('/api/item', api_login_req, function (req, res) {
     });
 });
 
+/////
+// todo: remove duplicate code between update and delete
+
 // todo: read more about parameters
 //       http://webapplog.com/url-parameters-and-routing-in-express-js/
 app.post('/api/item/:id', api_login_req, function(req, res) {
@@ -215,6 +218,33 @@ app.post('/api/item/:id', api_login_req, function(req, res) {
             res.status(HTTP_RES_CODE.client_err)
               .json({error: err.toString()});
           });
+        }
+      });
+  }
+});
+
+app.del('/api/item/:id', api_login_req, function(req, res) {
+  var item_id = parseInt(req.params.id);
+  // todo: other checks/parsing for string to int in js?
+  if (isNaN(item_id) && item_id !== parseFloat(req.params.id)) {
+      res.status(HTTP_RES_CODE.client_err)
+        .json({error: "item id must be an integer"});
+  } else {
+    models.Item.findById(item_id)
+      .then(function (item) {
+        if (item === null) {
+          res.status(HTTP_RES_CODE.client_err)
+            .json({error: "item lookup by id failed",
+                   data: item_id});
+        } else {
+          item.destroy()
+            .then(function () {
+              res.json({});
+            }, function (err) {
+              // todo: this might really be a client or server error
+              res.status(HTTP_RES_CODE.client_err)
+                .json({error: err.toString()});
+            });
         }
       });
   }
