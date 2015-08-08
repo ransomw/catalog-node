@@ -15,6 +15,7 @@ var app = express();
 
 var HTTP_RES_CODE = {
   client_err: 400,
+  auth_err: 401,
   server_err: 500
 };
 
@@ -166,5 +167,23 @@ var make_models_endpoint = function (model) {
 
 app.get('/api/categories', make_models_endpoint(models.Category));
 app.get('/api/items', make_models_endpoint(models.Item));
+
+var api_login_req = function (req, res, next) {
+  if (req.session.user_id) {
+    return next();
+  }
+  res.status(HTTP_RES_CODE.auth_err)
+    .json({error: "unauthorized"});
+};
+
+app.post('/api/item', api_login_req, function (req, res) {
+  models.Item.create(req.body)
+    .then(function (new_item) {
+      res.json({});
+    }, function (err) {
+      res.status(HTTP_RES_CODE.client_err)
+        .json({error: err.toString()});
+    });
+});
 
 module.exports = app;

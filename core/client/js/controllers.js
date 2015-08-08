@@ -7,7 +7,8 @@ define([
 
   var ENDPOINTS = {
     categories: '/api/categories',
-    items: '/api/items'
+    items: '/api/items',
+    item_new: '/api/item'
   };
 
   // todo: check for error in superagent callbacks
@@ -29,8 +30,9 @@ define([
   // todo: service/factory for data
   // todo: frontend routing like python app when categories are clicked
   controllers.controller('HomeCtrl', [
-    '$scope',
-    function HomeCtrl($scope) {
+    '$scope', 'loginProvider',
+    function HomeCtrl($scope, loginProvider) {
+      $scope.logged_in = loginProvider.logged_in;
 
       $scope.items_title = "Latest Items";
       $scope.categories = [];
@@ -90,6 +92,7 @@ define([
     }]);
 
 
+  // Read item controller
   controllers.controller('RItemCtrl', [
     '$scope', '$routeParams',
     function RItemCtrl($scope, $routeParams) {
@@ -120,6 +123,38 @@ define([
               });
             });
         });
+    }]);
+
+  // todo: form validation
+  controllers.controller('CItemCtrl', [
+    '$scope', '$location',
+    function CItemCtrl($scope, $location) {
+      $scope.loading = true;
+      $scope.err_msg = undefined;
+
+      $scope.addItem = function (itemForm) {
+        $scope.loading = true;
+        request.post(ENDPOINTS.item_new)
+          .send($scope.item)
+          .accept('json')
+          .end(function (err, res) {
+            if (err !== null) {
+              $scope.err_msg = res.body.error;
+            } else {
+              $location.path('/');
+            }
+          });
+      };
+
+      request.get(ENDPOINTS.categories)
+        .accept('json')
+        .end(function (err, res) {
+          $scope.$apply(function () {
+            $scope.categories = res.body;
+            $scope.loading = false;
+          });
+        });
+
     }]);
 
 });

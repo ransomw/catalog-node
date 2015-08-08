@@ -10,10 +10,10 @@
     </ul>
   </div>
   <div class="col-md-9">
-    <!-- todo: show/hide on angular login -->
-    <!--     <a class="body-bold" href="{{url_for('item_new')}}"> -->
-    <!--   Add item -->
-    <!-- </a> -->
+    <a class="body-bold" href="#/catalog/item/new"
+       ng-show="logged_in()">
+      Add item
+    </a>
     <h3>{{items_title}}</h3>
     <ul>
       <li ng-repeat="item in items">

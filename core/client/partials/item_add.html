@@ -1,0 +1,63 @@
+<div class="container">
+  <div class="row">
+    <div class="col-md-3">
+      <h3>Add item</h3>
+      <div class="alert alert-danger" role="alert" ng-show="err_msg">
+        {{err_msg}}
+      </div>
+      <!-- novalidate disables browser native form validation -->
+      <form name="itemForm" novalidate>
+        <!-- todo: crsf -->
+        <!-- <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"> -->
+
+        <div class="form-group">
+          <label for="title" class="control-label">Title</label>
+          <input type="text" name="title" id="title"
+                 ng-model="item.title"
+                 class="form-control"
+                 placeholder="Enter title">
+                 <!-- {% if item %} -->
+                 <!-- value="{{item.title}}" -->
+                 <!-- {% endif %} -->
+        </div>
+        <div class="form-group">
+          <label for="description" class="control-label">Description</label>
+          <input type="text" name="description" id="description"
+                 ng-model="item.description"
+                 class="form-control"
+                 placeholder="Enter description">
+                 <!-- {% if item %} -->
+                 <!-- value="{{item.description}}" -->
+                 <!-- {% endif %} -->
+        </div>
+        <div class="form-group">
+          <label for="category" class="control-label">Category</label>
+          <select name="category" id="category"
+                  ng-model="item.category_id"
+                  class="form-control">
+            <option ng-repeat="category in categories"
+                    value="{{category.id}}"
+                    >
+                    <!-- {% if item and category.id == item.category_id %} -->
+                    <!-- selected="true" -->
+                    <!-- {% endif %} -->
+              {{category.name}}
+            </option>
+          </select>
+        </div>
+        <!-- todo: file upload -->
+        <!-- <div class="form-group"> -->
+        <!--   <label for="picture">Picture</label> -->
+        <!--   <input type="file" name="picture" id="picture"> -->
+        <!-- </div> -->
+        <button ng-click="addItem(itemForm)"
+                ng-disabled="loading"
+                class="btn">
+          Submit
+        </button>
+      </form>
+
+    </div>
+    <div class="col-md-9"></div>
+  </div>
+</div>

@@ -12,6 +12,7 @@ var User = sqlize.define('User', {
   password: {type: Sqlize.STRING(500), allowNull: true}
 });
 
+// todo: for Udacity URL scheme spec, ensure no category is named 'item'
 var Category = sqlize.define('Category', {
   id: {type: Sqlize.INTEGER, primaryKey: true},
   name: {type: Sqlize.STRING(80), allowNull: false, unique: true}
@@ -26,7 +27,8 @@ var Item = sqlize.define('Item', {
     references: {
       model: Category,
       key: 'id'
-    }
+    },
+    allowNull: false
   },
   user_id: {
     type: Sqlize.INTEGER,

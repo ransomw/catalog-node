@@ -26,6 +26,8 @@ require([
   'services'
 ], function(angular, CONST) {
 
+  // todo: use angular logging on errors
+
   angular.element(document).ready(function () {
     var catalog_app = angular.module(CONST.APP_NAME, [
       'ngRoute',
@@ -40,6 +42,10 @@ require([
            .when('/', {
              templateUrl: CONST.PARTIAL_BASE + 'home.html',
              controller: 'HomeCtrl'
+           })
+           .when('/catalog/item/new', {
+             templateUrl: CONST.PARTIAL_BASE + 'item_add.html',
+             controller: 'CItemCtrl' // C for Create
            })
          // todo: be sure to place items url before here
          //       if rewriting the home controller to handle

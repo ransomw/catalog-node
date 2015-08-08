@@ -3,6 +3,10 @@ define([
   'constants',
   'superagent'
 ], function (angular, CONST, request) {
+
+  // todo: handle all HTTP API calls through services
+  //       and update login status using a module global
+
   var services = angular.module(CONST.APP_NAME + '.services', []);
 
   services.factory('loginProvider', function() {
@@ -16,6 +20,8 @@ define([
           throw new Error("couldn't get login status");
         }
         user = res.body;
+        console.log("set user as");
+        console.log(user);
       });
 
     var logged_in = function () {
