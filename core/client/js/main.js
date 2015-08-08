@@ -44,8 +44,12 @@ require([
              controller: 'HomeCtrl'
            })
            .when('/catalog/item/new', {
-             templateUrl: CONST.PARTIAL_BASE + 'item_add.html',
-             controller: 'CItemCtrl' // C for Create
+             templateUrl: CONST.PARTIAL_BASE + 'item_add_edit.html',
+             controller: 'CUItemCtrl' // C for Create, U for Update
+           })
+           .when('/catalog/:title/edit', {
+             templateUrl: CONST.PARTIAL_BASE + 'item_add_edit.html',
+             controller: 'CUItemCtrl' // C for Create, U for Update
            })
          // todo: be sure to place items url before here
          //       if rewriting the home controller to handle

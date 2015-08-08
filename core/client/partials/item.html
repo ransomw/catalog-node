@@ -6,14 +6,15 @@
     <!-- <img src="{{url_for('item_img',item_id=item.id)}}?rand={{rand_q}}"> -->
     <!-- {% endif %} -->
     <p>Description: {{item.description}}</p>
-    <!-- {% if can_modify %} -->
-    <!-- <a href="{{url_for('item_edit', item_title=item.title)}}"> -->
-    <!--   Edit -->
-    <!-- </a> -->
-    <!-- | -->
-    <!-- <a href="{{url_for('item_delete', item_title=item.title)}}"> -->
-    <!--   Delete -->
-    <!-- </a> -->
-    <!-- {% endif %} -->
+    <!-- todo: only allow owners of items to edit -->
+    <div ng-show="logged_in()">
+      <a href="#/catalog/{{item.title}}/edit">
+        Edit
+      </a>
+      |
+      <a>
+        Delete
+      </a>
+    </div>
   </div>
 </div>

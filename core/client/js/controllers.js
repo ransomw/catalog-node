@@ -94,11 +94,14 @@ define([
 
   // Read item controller
   controllers.controller('RItemCtrl', [
-    '$scope', '$routeParams',
-    function RItemCtrl($scope, $routeParams) {
+    '$scope', '$routeParams', 'loginProvider',
+    function RItemCtrl($scope, $routeParams, loginProvider) {
+
       var cat_name = $routeParams.catName;
       var item_title = $routeParams.itemTitle;
       var item;
+
+      $scope.logged_in = loginProvider.logged_in;
 
       // todo: use promises rather than nested callbacks
       request.get(ENDPOINTS.categories)
@@ -126,21 +129,35 @@ define([
     }]);
 
   // todo: form validation
-  controllers.controller('CItemCtrl', [
-    '$scope', '$location',
-    function CItemCtrl($scope, $location) {
+  controllers.controller('CUItemCtrl', [
+    '$scope', '$location', '$routeParams',
+    function CUItemCtrl($scope, $location, $routeParams) {
+
+      var item_title = $routeParams.title;
+
+      if (item_title) {
+        $scope.action = "Add";
+      } else {
+        $scope.action = "Edit";
+      }
       $scope.loading = true;
       $scope.err_msg = undefined;
 
-      $scope.addItem = function (itemForm) {
+      $scope.addEditItem = function (itemForm) {
+        var endpoint = ENDPOINTS.item_new;
         $scope.loading = true;
-        request.post(ENDPOINTS.item_new)
+        if ($scope.item.id) {
+          endpoint += '/' + $scope.item.id;
+        }
+        request.post(endpoint)
           .send($scope.item)
           .accept('json')
           .end(function (err, res) {
+            $scope.loading = false;
             if (err !== null) {
               $scope.err_msg = res.body.error;
             } else {
+              // todo: appears not to be working ...
               $location.path('/');
             }
           });
@@ -151,7 +168,22 @@ define([
         .end(function (err, res) {
           $scope.$apply(function () {
             $scope.categories = res.body;
-            $scope.loading = false;
+            if (item_title) {
+              request.get(ENDPOINTS.items)
+                .accept('json')
+                .query({title: item_title})
+                .end(function (err, res) {
+                  if (res.body.length !== 1) {
+                    throw new Error("expected exactly one item");
+                  }
+                  $scope.$apply(function () {
+                    $scope.item = res.body[0];
+                    $scope.loading = false;
+                  });
+                });
+            } else {
+              $scope.loading = false;
+            }
           });
         });
 

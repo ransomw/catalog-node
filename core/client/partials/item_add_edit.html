@@ -1,7 +1,7 @@
 <div class="container">
   <div class="row">
     <div class="col-md-3">
-      <h3>Add item</h3>
+      <h3>{{action}} item</h3>
       <div class="alert alert-danger" role="alert" ng-show="err_msg">
         {{err_msg}}
       </div>
@@ -50,7 +50,7 @@
         <!--   <label for="picture">Picture</label> -->
         <!--   <input type="file" name="picture" id="picture"> -->
         <!-- </div> -->
-        <button ng-click="addItem(itemForm)"
+        <button ng-click="addEditItem(itemForm)"
                 ng-disabled="loading"
                 class="btn">
           Submit
