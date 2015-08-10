@@ -55,9 +55,6 @@ require([
              templateUrl: CONST.PARTIAL_BASE + 'item_delete.html',
              controller: 'DItemCtrl' // D for Delete
            })
-         // todo: be sure to place items url before here
-         //       if rewriting the home controller to handle
-         //       a url scheme more like the python client
            .when('/catalog/:catName/:itemTitle', {
              templateUrl: CONST.PARTIAL_BASE + 'item.html',
              controller: 'RItemCtrl' // R for Read

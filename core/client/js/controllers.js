@@ -157,8 +157,9 @@ define([
             if (err !== null) {
               $scope.err_msg = res.body.error;
             } else {
-              // todo: appears not to be working ...
-              $location.path('/');
+              $scope.$apply(function () {
+                $location.path('/');
+              });
             }
           });
       };
@@ -207,8 +208,9 @@ define([
             if (err) {
               throw new Error("delete failed");
             }
-            // todo: appears not to be working ...
-            $location.path('/');
+            $scope.$apply(function () {
+              $location.path('/');
+            });
           });
       };
 
