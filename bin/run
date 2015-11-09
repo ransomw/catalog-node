@@ -2,7 +2,7 @@
 
 var app = require('../core/server');
 
-var PORT = 3000;
+var PORT = process.env.PORT || 3000;
 
 var server = app.listen(PORT, function () {
   console.log("app running on port " + PORT);

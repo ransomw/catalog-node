@@ -1,0 +1,27 @@
+// -*-js2-*-
+
+var Mocha = require('mocha');
+var fs = require('fs');
+var path = require('path');
+
+var mocha = new Mocha({
+  timeout: 10000
+});
+
+// todo: global. problems "programmatically" using mocha, as at
+// https://github.com/mochajs/mocha/wiki/Using-mocha-programmatically
+//       we're still loading a file rather than a module, so
+// M is for Mocha
+global.M_ARGS = {
+  test_dir: path.resolve('./core/test/functional')
+};
+
+mocha.addFile(
+  path.join(global.M_ARGS.test_dir, 'index.js')
+);
+
+mocha.run(function(failures){
+  process.on('exit', function () {
+    process.exit(failures);
+  });
+});
