@@ -7,64 +7,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Catalog App</title>
     <link rel="stylesheet" type="text/css"
-          href="static/css/bootstrap.min.css"
-          >
+          href="static/css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css"
-          href="static/css/style.css"
-          >
+          href="static/js/vendor/bower/spinkit/css/spinkit.css">
+    <link rel="stylesheet" type="text/css"
+          href="static/css/style.css">
 </head>
 <body>
 
   <div nav-bar my-data-sample="from custom directive">
-
-     <!-- id="header-ctrl-div" ng-controller="HeaderCtrl"> -->
-
-    <!-- <nav class="navbar navbar-fixed-top"> -->
-    <!--   <div class="container"> -->
-    <!--     <div class="navbar-header"> -->
-    <!--       <button type="button" class="navbar-toggle collapsed" -->
-    <!--               data-toggle="collapse" data-target="#navbar" -->
-    <!--               ng-hide="loading"> -->
-    <!--         <span class="sr-only">Toggle navigation</span> -->
-    <!--         <span class="icon-bar"></span> -->
-    <!--         <span class="icon-bar"></span> -->
-    <!--         <span class="icon-bar"></span> -->
-    <!--       </button> -->
-    <!--       <a href="#/" class="navbar-brand"> -->
-    <!--         Catalog App -->
-    <!--       </a> -->
-    <!--     </div> -->
-    <!--     <div -->
-    <!--        id="navbar" -->
-    <!--        class="navbar-collapse collapse"> -->
-    <!--       <ul class="nav navbar-nav navbar-right" -->
-    <!--           ng-hide="loading" -->
-    <!--           > -->
-    <!--         <li ng-hide="logged_in()"> -->
-    <!--           <p class="navbar-btn"> -->
-    <!--             <a href="/login" -->
-    <!--                class="btn"> -->
-    <!--               Login -->
-    <!--             </a> -->
-    <!--           </p> -->
-    <!--         </li> -->
-    <!--         <li ng-show="logged_in()"> -->
-    <!--           <p class="navbar-btn"> -->
-    <!--             <a href="/logout" -->
-    <!--                class="btn"> -->
-    <!--               Logout -->
-    <!--             </a> -->
-    <!--           </p> -->
-    <!--         </li> -->
-    <!--       </ul> -->
-    <!--     </div> -->
-    <!--   </div> -->
-    <!-- </nav> -->
-
+    <nav class="navbar navbar-fixed-top">
+      <div class="navbar-header sk-wave">
+        <div class="sk-rect sk-rect1"></div>
+        <div class="sk-rect sk-rect2"></div>
+        <div class="sk-rect sk-rect3"></div>
+        <div class="sk-rect sk-rect4"></div>
+        <div class="sk-rect sk-rect5"></div>
+      </div>
+    </nav>
   </div>
 
   <div class="container">
-    <div ng-view></div>
+    <div ng-view>
+      <div class="sk-rotating-plane"></div>
+    </div>
   </div>
 
   <script

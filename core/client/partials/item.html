@@ -1,4 +1,4 @@
-<div class="row">
+<div class="row" ng-hide="loading">
   <div class="col-md-12">
     <h3>{{item.title}}</h3>
     <!-- {% if has_img %} -->
@@ -16,5 +16,11 @@
         Delete
       </a>
     </div>
+  </div>
+</div>
+
+<div class="row" ng-show="loading">
+  <div class="col-md-12">
+    <div class="sk-rotating-plane"></div>
   </div>
 </div>

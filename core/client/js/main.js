@@ -35,6 +35,7 @@ require([
       CONST.APP_NAME + '.services'
     ]);
 
+    // todo: special characters (%20 for space, etc) in URLs look bad
     catalog_app.config(
       ['$routeProvider',
        function($routeProvider) {

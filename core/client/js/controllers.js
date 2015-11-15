@@ -35,6 +35,7 @@ define([
     '$scope', 'loginProvider',
     function HomeCtrl($scope, loginProvider) {
       $scope.logged_in = loginProvider.logged_in;
+      $scope.loading = true;
 
       $scope.items_title = "Latest Items";
       $scope.categories = [];
@@ -86,6 +87,7 @@ define([
                 });
                 $scope.$apply(function () {
                   $scope.items = items;
+                  $scope.loading = false;
                 });
               });
           });
@@ -103,6 +105,7 @@ define([
       var item_title = $routeParams.itemTitle;
       var item;
 
+      $scope.loading = true;
       $scope.logged_in = loginProvider.logged_in;
 
       // todo: use promises rather than nested callbacks
@@ -125,11 +128,13 @@ define([
               item = res.body[0];
               $scope.$apply(function () {
                 $scope.item = item;
+                $scope.loading = false;
               });
             });
         });
     }]);
 
+  // todo: wrong behavior when no category is selected
   // todo: form validation
   controllers.controller('CUItemCtrl', [
     '$scope', '$location', '$routeParams',
@@ -138,11 +143,16 @@ define([
       var item_title = $routeParams.title;
 
       if (item_title) {
-        $scope.action = "Add";
-      } else {
         $scope.action = "Edit";
+      } else {
+        $scope.action = "Add";
       }
-      $scope.loading = true;
+
+      // status for POST
+      $scope.loading = false;
+      // status for initial GET
+      $scope.loading_init = true;
+
       $scope.err_msg = undefined;
 
       $scope.addEditItem = function (itemForm) {
@@ -181,11 +191,11 @@ define([
                   }
                   $scope.$apply(function () {
                     $scope.item = res.body[0];
-                    $scope.loading = false;
+                    $scope.loading_init = false;
                   });
                 });
             } else {
-              $scope.loading = false;
+              $scope.loading_init = false;
             }
           });
         });
@@ -200,7 +210,10 @@ define([
 
       var item_id;
 
-      $scope.loading = true;
+      // status for POST
+      $scope.loading = false;
+      // status for initial GET
+      $scope.loading_init = true;
 
       $scope.delItem = function () {
         $scope.loading = true;
@@ -228,7 +241,7 @@ define([
             if (!item_id) {
               throw new Error("expected item id to be defined");
             }
-            $scope.loading = false;
+            $scope.loading_init = false;
           });
         });
 
