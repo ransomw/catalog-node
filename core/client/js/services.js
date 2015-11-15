@@ -11,6 +11,7 @@ define([
 
   services.factory('loginProvider', function() {
 
+    var loading = true;
     var user;
 
     request.get('/user')
@@ -22,14 +23,20 @@ define([
         user = res.body;
         console.log("set user as");
         console.log(user);
+        loading = false;
       });
 
     var logged_in = function () {
-      return user !== null;
+      return user && user !== null;
+    };
+
+    var is_loading = function () {
+      return loading;
     };
 
     return {
-      logged_in: logged_in
+      logged_in: logged_in,
+      loading: is_loading
     };
   });
 });

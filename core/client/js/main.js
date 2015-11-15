@@ -21,10 +21,10 @@ window.name = "NG_DEFER_BOOTSTRAP!";
 require([
   'angular',
   'constants',
-  'angularRoute',
   'controllers',
+  'angularRoute',
   'services'
-], function(angular, CONST) {
+], function(angular, CONST, controllers) {
 
   // todo: use angular logging on errors
 
@@ -62,7 +62,46 @@ require([
            .otherwise({
              redirectTo: '/'
            });
+
+
        }]);
+
+    catalog_app.directive('navBar',
+      ['$templateRequest', '$compile', '$controller',
+       function($templateRequest, $compile, $controller) {
+
+         controllers.HeaderCtrl.$inject = ['$scope',
+                                           '$templateRequest',
+                                           'loginProvider'];
+
+         var directive_link = function(scope, $el, attrs) {
+           var locals = {};
+           locals.$scope = scope;
+
+           // just for api reference
+           console.log(attrs.myDataSample);
+
+           $templateRequest(CONST.PARTIAL_BASE + 'nav.html')
+             .then(function (template) {
+               var link;
+               var controller;
+               $el.html(template);
+               link = $compile($el.contents());
+               controller = $controller(controllers.HeaderCtrl,
+                                            locals);
+               $el.data('$ngControllerController', controller);
+               $el.children().data('$ngControllerController',
+                                   controller);
+               link(scope);
+             });
+
+         };
+
+         return {
+           link: directive_link
+         };
+       }]);
+
 
     angular.bootstrap(document, [CONST.APP_NAME]);
 

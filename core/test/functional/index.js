@@ -9,7 +9,7 @@ var app = require(PROJ_ROOT + '/core/server');
 var CD_PATH = config.CD_PATH;
 var CD_PORT = config.CD_PORT;
 var APP_PORT = process.env.PORT || 3001;
-
+var APP_URL = 'http://localhost';
 
 var client = webdriverio.remote({
   host: 'localhost',
@@ -19,6 +19,11 @@ var client = webdriverio.remote({
 var cd_proc;
 var server;
 
+//// convenience
+
+var url = function (url_path) {
+  return APP_URL + ':' + APP_PORT.toString() + url_path;
+};
 
 describe('functional tests', function() {
 
@@ -39,13 +44,20 @@ describe('functional tests', function() {
   it('loads the homepage', function (done) {
     client
       .init()
-      .url('http://localhost:'+APP_PORT.toString())
+      .url(url('/'))
       .getTitle().then(function(title) {
         console.log('Title is: ' + title);
       })
       .end(function () {
         done();
       });
+  });
+
+  describe('no login tests', function () {
+    it('displays the homepage', function(done) {
+      // client.init
+      done();
+    });
   });
 
 });

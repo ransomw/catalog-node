@@ -18,12 +18,14 @@ define([
     CONST.APP_NAME+'.controllers', []);
 
 
-  controllers.controller('HeaderCtrl', [
-    '$scope', 'loginProvider',
-    function HeaderCtrl($scope, loginProvider) {
-      $scope.logged_in = loginProvider.logged_in;
-    }]);
-
+  var HeaderCtrl = function (
+    $scope, $templateRequest, loginProvider) {
+    $scope.loading = true;
+    $scope.logged_in = loginProvider.logged_in;
+    $scope.$watch(loginProvider.loading, function () {
+      $scope.loading = loginProvider.loading();
+    });
+  };
 
   // todo: nested views
   // todo: custom filter for items
@@ -231,4 +233,9 @@ define([
         });
 
     }]);
+
+
+  return {
+    HeaderCtrl: HeaderCtrl
+  };
 });
