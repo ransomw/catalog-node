@@ -5,7 +5,7 @@ var fs = require('fs');
 var path = require('path');
 
 var mocha = new Mocha({
-  timeout: 10000
+  timeout: 50000
 });
 
 // todo: global. problems "programmatically" using mocha, as at
