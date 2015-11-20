@@ -1,45 +1,81 @@
+var _ = require('lodash');
 var Sqlize = require('sequelize');
+var app = require('../index');
 
-var sqlize = new Sqlize(null, null, null, {
-  dialect: 'sqlite',
-  storage: 'catalog.db'
-});
 
-var User = sqlize.define('User', {
-  id: {type: Sqlize.INTEGER, primaryKey: true},
-  name: {type: Sqlize.STRING(250), allowNull: false},
-  email: {type: Sqlize.STRING(250), allowNull: false, unique: true},
-  password: {type: Sqlize.STRING(500), allowNull: true}
-});
+var connect_db = function () {
+  return new Sqlize(null, null, null, {
+    dialect: 'sqlite',
+    storage: app.locals.config.SQLITE_PATH,
+    logging: function (msg) { }
+  });
+};
+
+// todo: defining model multiple times is allowed, but slow...
+// consider keeping track of defined models internal to app,
+// and redefine on new database connection
+// also, see
+// https://github.com/sequelize/sequelize/issues/931
+var get_model = function(db_conn, model_def) {
+  // todo: sort out why freezeTableName: true prevents initdb error
+  model_def[2] = _.merge(model_def[2] || {},
+                         {freezeTableName: true});
+  return db_conn.define.apply(db_conn, model_def);
+};
+
+var get_db = function () {
+  if (!app.locals.db_conn) {
+    app.locals.db_conn = connect_db();
+  }
+  return app.locals.db_conn;
+};
+
+var _User = [
+  'User',
+  {
+    id: {type: Sqlize.INTEGER, primaryKey: true},
+    name: {type: Sqlize.STRING(250), allowNull: false},
+    email: {type: Sqlize.STRING(250), allowNull: false, unique: true},
+    password: {type: Sqlize.STRING(500), allowNull: true}
+  }
+];
 
 // todo: for Udacity URL scheme spec, ensure no category is named 'item'
-var Category = sqlize.define('Category', {
-  id: {type: Sqlize.INTEGER, primaryKey: true},
-  name: {type: Sqlize.STRING(80), allowNull: false, unique: true}
-});
+var _Category = [
+  'Category', {
+    id: {type: Sqlize.INTEGER, primaryKey: true},
+    name: {type: Sqlize.STRING(80), allowNull: false, unique: true}
+  }
+];
 
-var Item = sqlize.define('Item', {
-  id: {type: Sqlize.INTEGER, primaryKey: true},
-  title: {type: Sqlize.STRING(80), allowNull: false, unique: true},
-  description: {type: Sqlize.STRING(250), allowNull: false},
-  category_id: {
-    type: Sqlize.INTEGER,
-    references: {
-      model: Category,
-      key: 'id'
+var _Item = [
+  'Item', {
+    id: {type: Sqlize.INTEGER, primaryKey: true},
+    title: {type: Sqlize.STRING(80), allowNull: false, unique: true},
+    description: {type: Sqlize.STRING(250), allowNull: false},
+    category_id: {
+      type: Sqlize.INTEGER,
+      references: {
+        model: _Category[0],
+        key: 'id'
+      },
+      allowNull: false
     },
-    allowNull: false
-  },
-  user_id: {
-    type: Sqlize.INTEGER,
-    references: {
-      model: User,
-      key: 'id'
+    user_id: {
+      type: Sqlize.INTEGER,
+      references: {
+        model: _User[0],
+        key: 'id'
+      }
     }
   }
-});
+];
 
 var lots_of_items = function () {
+  var sqlize = get_db();
+  var User = get_model(sqlize, _User);
+  var Category = get_model(sqlize, _Category);
+  var Item = get_model(sqlize, _Item);
   return sqlize.sync({force: true}).then(function () {
     return Category.create({
       name: "Soccer"
@@ -133,10 +169,9 @@ var lots_of_items = function () {
   });
 };
 
-module.exports = {
-  sqlize: sqlize,
-  User: User,
-  Category: Category,
-  Item: Item,
-  lots_of_items: lots_of_items
-};
+module.exports.User = _User;
+module.exports.Category = _Category;
+module.exports.Item = _Item;
+module.exports.get_model = get_model;
+module.exports.get_db = get_db;
+module.exports.lots_of_items = lots_of_items;

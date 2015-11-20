@@ -1,5 +1,6 @@
 // -*-js2-*-
 
+require('../core/server');
 var models = require('../core/server/models');
 
 models.lots_of_items().done();

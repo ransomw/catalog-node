@@ -4,6 +4,8 @@ var path = require('path');
 var q = require('q');
 var assert = require('chai').assert;
 var _ = require('lodash');
+var tmp = require('tmp');
+var fs = require('fs');
 
 // see bin/test
 var TEST_DIR = global.M_ARGS.test_dir;
@@ -13,18 +15,22 @@ var CONST = require(path.join(TEST_DIR, 'const'));
 var util = require(path.join(TEST_DIR, 'util'));
 var PROJ_ROOT = path.join(TEST_DIR, '../../..');
 var app = require(PROJ_ROOT + '/core/server');
+var init_db = require(PROJ_ROOT + '/core/server/models').lots_of_items;
 var CD_PATH = config.CD_PATH;
 var CD_PORT = config.CD_PORT;
 var APP_PORT = process.env.PORT || 3001;
 var APP_URL = 'http://localhost';
+
+tmp.setGracefulCleanup();
 
 var client = webdriverio.remote({
   host: 'localhost',
   port: CD_PORT,
   desiredCapabilities: { browserName: 'chrome' }
 });
-var cd_proc;
+var cd_proc; // chomedriver process
 var server;
+var db_file; // sqlite database temp file object
 
 //// convenience
 
@@ -75,10 +81,13 @@ var wait_until_load = function () {
 
 describe("functional tests", function() {
 
-  // todo: db setup/teardown
+  // todo: (?) app/server per-request setup/teardown
   before(function (done) {
     cd_proc = execFile(CD_PATH, ['--url-base=/wd/hub',
                                  '--port='+CD_PORT.toString()]);
+    db_file = tmp.fileSync();
+    app.locals.config.SQLITE_PATH = db_file.name;
+    init_db();
     server = app.listen(APP_PORT, function () {
       done();
     });
@@ -87,6 +96,8 @@ describe("functional tests", function() {
   after(function (done) {
     cd_proc.kill();
     server.close();
+    fs.closeSync(db_file.fd);
+    fs.unlinkSync(db_file.name);
     done();
   });
 
@@ -95,7 +106,6 @@ describe("functional tests", function() {
 
     it("displays the homepage", function(done) {
 
-      // todo: throwing error in getHTML cb doesn't cause test to fail
       client
         .init()
         .url(url('/'))
@@ -128,8 +138,12 @@ describe("functional tests", function() {
                          "item category doesn't match expected");
           });
         })
-        .end(function () {
-          done();
+        .end(function (err, res) {
+          if (err) {
+            done(err);
+          } else {
+            done();
+          }
         });
 
     });
