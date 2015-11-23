@@ -33,7 +33,7 @@ module.exports.ITEMS = [
    'description': "Louisville slugger",
    'cat': "Baseball"},
   {'title': "Jersey",
-   'description': "World Cup 2014 commemorative jersy",
+   'description': "World Cup 2014 commemorative jersey",
    'cat': "Soccer"},
   {'title': "Soccer Cleats",
    'description': "Nike cleats",
