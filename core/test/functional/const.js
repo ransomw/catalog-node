@@ -39,3 +39,5 @@ module.exports.ITEMS = [
    'description': "Nike cleats",
    'cat': "Soccer"}
 ];
+
+module.exports.PAGELOAD_TIMEOUT = 10000;

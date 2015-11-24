@@ -11,6 +11,7 @@ var fs = require('fs');
 var TEST_DIR = global.M_ARGS.test_dir;
 var config = require(path.join(TEST_DIR, 'config'));
 var pages = require(path.join(TEST_DIR, 'pages'));
+var cpages = require(path.join(TEST_DIR, 'client_pages'));
 var CONST = require(path.join(TEST_DIR, 'const'));
 var util = require(path.join(TEST_DIR, 'util'));
 var PROJ_ROOT = path.join(TEST_DIR, '../../..');
@@ -20,18 +21,9 @@ var CD_PATH = config.CD_PATH;
 var CD_PORT = config.CD_PORT;
 var APP_PORT = process.env.PORT || 3001;
 var APP_URL = 'http://localhost';
-var PAGELOAD_TIMEOUT = 10000;
+
 
 tmp.setGracefulCleanup();
-
-var client = webdriverio.remote({
-  host: 'localhost',
-  port: CD_PORT,
-  desiredCapabilities: { browserName: 'chrome' }
-});
-var cd_proc; // chomedriver process
-var server;
-var db_file; // sqlite database temp file object
 
 //// convenience
 
@@ -80,18 +72,17 @@ var wait_until_load = function () {
     });
 };
 
-var make_client_end_cb = function(test_done_cb) {
-  return function (err, res) {
-    if (err) {
-      test_done_cb(err);
-    } else {
-      test_done_cb();
-    }
-  };
-};
-
-
 describe("functional tests", function() {
+
+
+  var client = webdriverio.remote({
+    host: 'localhost',
+    port: CD_PORT,
+    desiredCapabilities: { browserName: 'chrome' }
+  });
+  var cd_proc; // chomedriver process
+  var server;
+  var db_file; // sqlite database temp file object
 
   var _test_nav = function (nav_page) {
     assert.equal(nav_page.brand(), 'Catalog App',
@@ -107,34 +98,61 @@ describe("functional tests", function() {
               "category names as expected");
   };
 
+
   // todo: (?) app/server per-request setup/teardown
-  before(function (done) {
-    cd_proc = execFile(CD_PATH, ['--url-base=/wd/hub',
-                                 '--port='+CD_PORT.toString()]);
+  var _before_test_case = function () {
     db_file = tmp.fileSync();
     app.locals.config.SQLITE_PATH = db_file.name;
     // todo: double-check args for .done() cb out of db api
-    init_db().done(function (res, err) {
-      assert.ok(!err, "database init fail");
+    return Q().then(function() {
+      return init_db();
+    }).then(function () {
+      var deferred = Q.defer();
       server = app.listen(APP_PORT, function () {
-        done();
+        deferred.resolve();
       });
+      return deferred.promise;
+    }).then(function () {
+      return client.init();
     });
+  };
+
+  var _after_test_case = function () {
+    return Q().then(function () {
+      return client.end();
+    }).then(function () {
+      var deferred = Q.defer();
+      server.close(function () {
+        deferred.resolve();
+      });
+      return deferred.promise;
+    }).then(function () {
+      fs.closeSync(db_file.fd);
+      fs.unlinkSync(db_file.name);
+    });
+  };
+
+  before(function () {
+    cd_proc = execFile(CD_PATH, ['--url-base=/wd/hub',
+                                 '--port='+CD_PORT.toString()]);
   });
 
   // todo: does not stop browser proc when tests fail
-  after(function (done) {
+  after(function () {
     cd_proc.kill();
-    server.close();
-    fs.closeSync(db_file.fd);
-    fs.unlinkSync(db_file.name);
-    done();
   });
 
   describe("no login tests", function () {
 
-    it("displays the homepage", function(done) {
+    beforeEach(function () {
+      return _before_test_case();
+    });
 
+    afterEach(function () {
+      return _after_test_case();
+    });
+
+    it("displays the homepage", function() {
       var test_home_page = function (html_str) {
         var home_page = new pages.HomePage(html_str);
         _test_nav(home_page);
@@ -154,15 +172,16 @@ describe("functional tests", function() {
         });
       };
 
-      client.init().url(url('/'))
-        .waitUntil(wait_until_load, PAGELOAD_TIMEOUT)
-        .getHTML('html').then(function (res) {
-          test_home_page(res);
-        })
-        .end(make_client_end_cb(done));
+      return Q().then(function () {
+        return client.url(url('/'))
+          .waitUntil(wait_until_load, CONST.PAGELOAD_TIMEOUT)
+          .getHTML('html');
+      }).then(function (res) {
+        test_home_page(res);
+      });
     });
 
-    it("displays the item list pages", function(done) {
+    it("displays the item list pages", function() {
 
       var test_items_page = function (cat_name, html_str) {
         var items_page = new pages.ItemsPage(html_str);
@@ -186,40 +205,38 @@ describe("functional tests", function() {
           "wrong items list header");
       };
 
-      client.init().url(url('/'))
-        .waitUntil(wait_until_load, PAGELOAD_TIMEOUT)
-      // todo: selectors ought not appear in tests
-        .elements("div.col-md-3 a").then(function (res) {
-          var self = this;
-          assert.ok(res.value, "found category link elements");
-          assert.equal(res.value.length, CONST.CATS.length,
-                       "found the right number of category link elems");
-          return Q.all(res.value.map(function (cat_a_val) {
-            return self.elementIdText(cat_a_val.ELEMENT)
-              .then(function (res) {
-                return {
-                  name: res.value.trim(),
-                  a_el: cat_a_val.ELEMENT
-                };
-              });
-          }));
-        })
-        .then(function (cat_infos) {
-          var self = this;
-          return util.promise_seq_do(cat_infos, function (cat_info) {
-            return self.elementIdClick(cat_info.a_el)
-              // todo: ought to wait for render
-              .then(function () {
-                return this.getHTML('html');
-              }).then(function (res) {
-                test_items_page(cat_info.name, res);
-              });
-          });
-        })
-        .end(make_client_end_cb(done));
+      return Q().then(function () {
+        return client.url(url('/'))
+          .waitUntil(wait_until_load, CONST.PAGELOAD_TIMEOUT)
+        // todo: selectors ought not appear in tests
+          .elements("div.col-md-3 a");
+      }).then(function (res) {
+        assert.ok(res.value, "found category link elements");
+        assert.equal(res.value.length, CONST.CATS.length,
+                     "found the right number of category link elems");
+        return Q.all(res.value.map(function (cat_a_val) {
+          return client.elementIdText(cat_a_val.ELEMENT)
+            .then(function (res) {
+              return {
+                name: res.value.trim(),
+                a_el: cat_a_val.ELEMENT
+              };
+            });
+        }));
+      }).then(function (cat_infos) {
+        return util.promise_seq_do(cat_infos, function (cat_info) {
+          return client.elementIdClick(cat_info.a_el)
+          // todo: ought to wait for render
+            .then(function () {
+              return this.getHTML('html');
+            }).then(function (res) {
+              test_items_page(cat_info.name, res);
+            });
+        });
+      });
     });
 
-    it("displays the items' pages", function(done) {
+    it("displays the items' pages", function() {
 
       var test_item_page = function(html_str) {
         var item_page = new pages.ItemPage(html_str);
@@ -239,23 +256,128 @@ describe("functional tests", function() {
         //                "does not display delete link when logged out");
       };
 
-      client.init().url(url('/'))
-        .waitUntil(wait_until_load, PAGELOAD_TIMEOUT)
-        .getHTML('html').then(function (res) {
-          var self = this;
-          var home_page = new pages.HomePage(res);
-          return util.promise_seq_map(home_page.items(), function (item) {
-            return self.url(url(item.url))
-              .waitUntil(wait_until_load, PAGELOAD_TIMEOUT)
-              .getHTML('html');
-          });
-        }).then(function (item_page_html_strs) {
-          item_page_html_strs.forEach(function (item_page_html_str) {
-            test_item_page(item_page_html_str);
-          });
-        })
-        .end(make_client_end_cb(done));
+      return Q().then(function () {
+        return client.url(url('/'))
+          .waitUntil(wait_until_load, CONST.PAGELOAD_TIMEOUT)
+          .getHTML('html');
+      }).then(function (res) {
+        var home_page = new pages.HomePage(res);
+        return util.promise_seq_map(home_page.items(), function (item) {
+          return client.url(url(item.url))
+            .waitUntil(wait_until_load, CONST.PAGELOAD_TIMEOUT)
+            .getHTML('html');
+        });
+      }).then(function (item_page_html_strs) {
+        item_page_html_strs.forEach(function (item_page_html_str) {
+          test_item_page(item_page_html_str);
+        });
+      });
     });
+
+  });
+
+  describe("login tests", function () {
+
+    var EMAIL = 'a@a.org';
+    var PASS = 'password';
+    var NAME = 'alice';
+
+    var sign_up = function (url) {
+      var login_page;
+      return Q().then(function () {
+        return new cpages.LoginPage(client, url);
+      }).then(function (page) {
+        login_page = page;
+      }).then(function () {
+        return Q.all([
+          login_page.set_email(EMAIL),
+          login_page.set_pass(PASS),
+          login_page.set_pass_confirm(PASS),
+          login_page.set_name(NAME)
+        ]);
+      }).then(function () {
+        return login_page.click_sign_up();
+      }).then(function () {
+        return client.waitUntil(wait_until_load, CONST.PAGELOAD_TIMEOUT);
+      });
+    };
+
+    var login = function (url) {
+      var login_page;
+      return Q().then(function () {
+        return new cpages.LoginPage(client, url);
+      }).then(function (page) {
+        // console.log("login created login_page");
+        login_page = page;
+      }).then(function () {
+        return Q.all([
+          login_page.set_email(EMAIL),
+          login_page.set_pass(PASS)
+        ]);
+      }).then(function () {
+        return login_page.click_sign_in();
+      }).then(function () {
+        return client.waitUntil(wait_until_load, CONST.PAGELOAD_TIMEOUT);
+      });
+    };
+
+    var sign_up_login = function (url) {
+      return Q().then(function () {
+        return sign_up(url);
+      });
+      // .then(function () {
+      //   console.log("logging in");
+      //   return login(url);
+      // });
+    };
+
+    var logout = function () {
+      return Q().then(function () {
+          return client.url(url('/'))
+            .waitUntil(wait_until_load, CONST.PAGELOAD_TIMEOUT)
+            .getHTML('html');
+        }).then(function (res) {
+          var home_page = new pages.HomePage(res);
+          return client.url(url(home_page.logout_url()))
+            .waitUntil(wait_until_load, CONST.PAGELOAD_TIMEOUT)
+            .getHTML('html');
+        }).then(function (res) {
+          var home_page = new pages.HomePage(res);
+          home_page.login_url();
+        });
+    };
+
+    describe("auth system", function () {
+
+
+      before(function () {
+        return _before_test_case();
+      });
+
+      after(function () {
+        return _after_test_case();
+      });
+
+      it("logs in", function () {
+        return Q().then(function () {
+          return client.url(url('/'))
+            .waitUntil(wait_until_load, CONST.PAGELOAD_TIMEOUT)
+            .getHTML('html');
+        }).then(function (res) {
+          var home_page = new pages.HomePage(res);
+          var login_url = home_page.login_url();
+          return sign_up_login(url(login_url));
+        }).then(function () {
+          // console.log("logging out");
+          return logout();
+        });
+      });
+    });
+
+    describe("crud tests", function () {
+
+    });
+
 
   });
 

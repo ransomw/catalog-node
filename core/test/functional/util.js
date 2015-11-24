@@ -10,6 +10,8 @@ module.exports.set_eq = function (arr1, arr2) {
 };
 
 module.exports.arr_elem = function(arr) {
+  assert.ok(Array.isArray(arr),
+            "arr_elem expects array argument");
   assert.equal(arr.length, 1,
                "expected exactly one element");
   return arr[0];
@@ -36,4 +38,14 @@ module.exports.promise_seq_map = function (arr, fn) {
       return curr_res_arr;
     });
   }, Q([]));
+};
+
+// in case arguements needs to be sliced (or diced)
+module.exports.args_2_arr = function(args) {
+  var arr = [];
+  var i;
+  for (i = 0; i < args.length; i += 1) {
+    arr[i] = args[i];
+  }
+  return arr;
 };

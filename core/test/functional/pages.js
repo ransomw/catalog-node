@@ -90,6 +90,14 @@ NavMixin.prototype.login_url = function () {
   return a_login.attribs.href;
 };
 
+NavMixin.prototype.logout_url = function () {
+  var dom = this.dom;
+  var a_logout = util.arr_elem(
+    select(dom, 'a').filter(has_text('Logout')));
+  return a_logout.attribs.href;
+};
+
+
 ///
 
 var CatsMixin = function () {};

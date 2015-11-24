@@ -2,11 +2,15 @@ var _ = require('lodash');
 var Sqlize = require('sequelize');
 var app = require('../index');
 
+// todo: consider flask-like app context notion
+var sqlite_path;
+
 
 var connect_db = function () {
+  sqlite_path = app.locals.config.SQLITE_PATH;
   return new Sqlize(null, null, null, {
     dialect: 'sqlite',
-    storage: app.locals.config.SQLITE_PATH,
+    storage: sqlite_path,
     logging: function (msg) { }
   });
 };
@@ -24,7 +28,8 @@ var get_model = function(db_conn, model_def) {
 };
 
 var get_db = function () {
-  if (!app.locals.db_conn) {
+  if (!app.locals.db_conn ||
+      sqlite_path !== app.locals.config.SQLITE_PATH) {
     app.locals.db_conn = connect_db();
   }
   return app.locals.db_conn;
