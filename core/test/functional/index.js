@@ -25,9 +25,20 @@ var APP_URL = 'http://localhost';
 
 tmp.setGracefulCleanup();
 
+// todo: more util.promise_seq_* would make a lot of this less noisy
+
 //// convenience
 
 var url = function (url_path) {
+  assert(typeof url_path === 'string', "url_path should be a string");
+  if (url_path[0] !== '/') {
+    if (url_path[0] === '#') {
+      url_path = '/' + url_path;
+    } else {
+      assert(false, "url_path should begin with '/' or '#', " +
+             "but got '" + url_path + "'");
+    }
+  }
   return APP_URL + ':' + APP_PORT.toString() + url_path;
 };
 
@@ -70,6 +81,17 @@ var wait_until_load = function () {
           return a && b;
         }, true);
     });
+};
+
+var wait_for_url = function (url) {
+  return function () {
+    var client = this;
+    return Q().then(function () {
+      return client.url();
+    }).then(function (url_res) {
+      return url_res.value === url;
+    });
+  };
 };
 
 describe("functional tests", function() {
@@ -282,10 +304,32 @@ describe("functional tests", function() {
     var PASS = 'password';
     var NAME = 'alice';
 
+    var _get_login_url = function () {
+      return Q().then(function () {
+        return client.url(url('/'))
+          .waitUntil(wait_until_load, CONST.PAGELOAD_TIMEOUT)
+          .getHTML('html');
+      }).then(function (res) {
+        var home_page = new pages.HomePage(res);
+        var login_url = home_page.login_url();
+        return url(login_url);
+      });
+    };
+
     var sign_up = function (url) {
       var login_page;
+      var login_url = url;
       return Q().then(function () {
-        return new cpages.LoginPage(client, url);
+        if (!login_url) {
+          return _get_login_url();
+        }
+        return null;
+      }).then(function (found_login_url) {
+        if (found_login_url !== null) {
+          login_url = found_login_url;
+        }
+      }).then(function () {
+        return new cpages.LoginPage(client, login_url);
       }).then(function (page) {
         login_page = page;
       }).then(function () {
@@ -304,10 +348,10 @@ describe("functional tests", function() {
 
     var login = function (url) {
       var login_page;
+
       return Q().then(function () {
         return new cpages.LoginPage(client, url);
       }).then(function (page) {
-        // console.log("login created login_page");
         login_page = page;
       }).then(function () {
         return Q.all([
@@ -325,8 +369,8 @@ describe("functional tests", function() {
       return Q().then(function () {
         return sign_up(url);
       });
+      /// going to login url when currently login redirects
       // .then(function () {
-      //   console.log("logging in");
       //   return login(url);
       // });
     };
@@ -350,11 +394,11 @@ describe("functional tests", function() {
     describe("auth system", function () {
 
 
-      before(function () {
+      beforeEach(function () {
         return _before_test_case();
       });
 
-      after(function () {
+      afterEach(function () {
         return _after_test_case();
       });
 
@@ -368,17 +412,171 @@ describe("functional tests", function() {
           var login_url = home_page.login_url();
           return sign_up_login(url(login_url));
         }).then(function () {
-          // console.log("logging out");
           return logout();
+          // todo: test logging back in
         });
       });
     });
 
     describe("crud tests", function () {
+      var ITEM = {
+        title: "Ball",
+        desc: "World Cup 2014 edition",
+        cat: "Soccer"
+      };
+
+      var ITEM_UPDATE = {
+        title: "Russian hockey stick",
+        desc: "infested with termites (a-la The Simspons)",
+        cat: "Hockey"
+      };
+
+
+      var _create = function () {
+        var create_page;
+        var create_url;
+        return Q().then(function () {
+          return sign_up_login();
+        }).then(function () {
+          return client.url(url('/'))
+            .waitUntil(wait_until_load, CONST.PAGELOAD_TIMEOUT)
+            .getHTML('html');
+        }).then(function (res) {
+          var home_page = new pages.HomePage(res);
+          create_url = url(home_page.create_url());
+          // return client.url(create_url)
+          //   .waitUntil(wait_until_load, CONST.PAGELOAD_TIMEOUT)
+          //   .getHTML('html');
+          return new cpages.CreatePage(client, create_url);
+        }).then(function (page) {
+          create_page = page;
+          // todo: move wait_until_load into client_pages
+          return client.waitUntil(
+            wait_until_load, CONST.PAGELOAD_TIMEOUT);
+        }).then(function () {
+          return Q.all([
+            create_page.set_title(ITEM.title),
+            create_page.set_desc(ITEM.desc),
+            create_page.set_cat(ITEM.cat)
+          ]);
+        }).then(function () {
+          return create_page.click_submit();
+        }).then(function () {
+          return client.waitUntil(
+            wait_for_url(url('#/')), CONST.PAGELOAD_TIMEOUT);
+        }).then(function (res) {
+          return client.waitUntil(
+            wait_until_load, CONST.PAGELOAD_TIMEOUT);
+        });
+      };
+
+      var _get_item_page = function (item_title) {
+        return Q().then(function () {
+          return client.url(url('/'))
+            .waitUntil(wait_until_load, CONST.PAGELOAD_TIMEOUT)
+            .getHTML('html');
+        }).then(function (res) {
+          var home_page = new pages.HomePage(res);
+          var items = home_page.items();
+          var item = util.arr_elem(
+            items.filter(function (item) {
+              return item.title === item_title;
+            }));
+          return client.url(url(item.url))
+            .waitUntil(wait_until_load, CONST.PAGELOAD_TIMEOUT)
+            .getHTML('html');
+        }).then(function (res) {
+          return new pages.ItemPage(res);
+        });
+      };
+
+      var _test_read = function (expected_vals) {
+        return Q().then(function () {
+          return _get_item_page(expected_vals.title);
+        }).then(function (item_page) {
+          assert.equal(item_page.title(), expected_vals.title);
+          assert.equal(item_page.description(), expected_vals.desc);
+        });
+      };
+
+      beforeEach(function () {
+        return _before_test_case();
+      });
+
+      afterEach(function () {
+        return _after_test_case();
+      });
+
+      it('creates', function () {
+        return _create();
+      });
+
+      it('reads', function () {
+        return Q().then(function () {
+          return _create();
+        }).then(function () {
+          return _test_read(ITEM);
+        });
+      });
+
+      it('updates', function () {
+        var edit_page;
+        return Q().then(function () {
+          return _create();
+        }).then(function () {
+          return _get_item_page(ITEM.title);
+        }).then(function (item_page) {
+          return new cpages.EditPage(client, url(item_page.edit_url()));
+        }).then(function (page) {
+          edit_page = page;
+          return Q.all([
+            edit_page.set_title(ITEM_UPDATE.title),
+            edit_page.set_desc(ITEM_UPDATE.desc),
+            edit_page.set_cat(ITEM_UPDATE.cat)
+          ]);
+        }).then(function () {
+          return edit_page.click_submit();
+        }).then(function () {
+          return client.waitUntil(
+            wait_for_url(url('#/')), CONST.PAGELOAD_TIMEOUT);
+        }).then(function (res) {
+          return client.waitUntil(
+            wait_until_load, CONST.PAGELOAD_TIMEOUT);
+        }).then(function () {
+          return _test_read(ITEM_UPDATE);
+        });
+      });
+
+      it('deletes', function () {
+        return Q().then(function () {
+          return _create();
+        }).then(function () {
+          return _get_item_page(ITEM.title);
+        }).then(function (item_page) {
+          return new cpages.DeletePage(
+            client, url(item_page.delete_url()));
+        }).then(function (delete_page) {
+          return delete_page.click_submit();
+        }).then(function () {
+          return client.waitUntil(
+            wait_for_url(url('#/')), CONST.PAGELOAD_TIMEOUT);
+        }).then(function (res) {
+          return client.waitUntil(
+            wait_until_load, CONST.PAGELOAD_TIMEOUT);
+        }).then(function () {
+          return client.url(url('/'))
+            .waitUntil(wait_until_load, CONST.PAGELOAD_TIMEOUT)
+            .getHTML('html');
+        }).then(function (res) {
+          var home_page = new pages.HomePage(res);
+          var items = home_page.items();
+          assert.equal(
+            0, items.filter(function (item) {
+              return item.title === ITEM.title;
+            }).length, "item present in list after delete");
+        });
+      });
 
     });
-
-
   });
-
 });

@@ -123,8 +123,12 @@ HomePage.prototype = Object.create(PageObj.prototype);
 _.merge(HomePage.prototype, NavMixin.prototype);
 _.merge(HomePage.prototype, CatsMixin.prototype);
 
+HomePage.prototype._items_div = function () {
+  return this.sel_with_text('h3', 'Latest Items').parent;
+};
+
 HomePage.prototype.items = function () {
-  var items_div = this.sel_with_text('h3', 'Latest Items').parent;
+  var items_div = this._items_div();
   return select(items_div, 'li').map(function (li_el) {
     var a_el = select_one(li_el, 'a');
     var cat = get_text(select_one(li_el, 'span'))
@@ -134,6 +138,11 @@ HomePage.prototype.items = function () {
             'cat': cat,
             'url': url};
   });
+};
+
+HomePage.prototype.create_url = function () {
+  var items_div = this._items_div();
+  return this.sel_with_text('a', /^Add item$/).attribs.href;
 };
 
 var ItemsPage = function (html_str) {

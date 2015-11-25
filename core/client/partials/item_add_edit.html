@@ -35,14 +35,12 @@
           <select name="category" id="category"
                   ng-model="item.category_id"
                   class="form-control">
+            <!-- {% if item and category.id == item.category_id %} -->
+            <!-- selected="true" -->
+            <!-- {% endif %} -->
             <option ng-repeat="category in categories"
                     value="{{category.id}}"
-                    >
-                    <!-- {% if item and category.id == item.category_id %} -->
-                    <!-- selected="true" -->
-                    <!-- {% endif %} -->
-              {{category.name}}
-            </option>
+                    >{{category.name}}</option>
           </select>
         </div>
         <!-- todo: file upload -->
