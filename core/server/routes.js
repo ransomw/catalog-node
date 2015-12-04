@@ -9,16 +9,14 @@ var HTTP_RES_CODE = {
 };
 
 app.get('/', function (req, res) {
-  // todo: use template
-  res.sendfile('core/client/index.html');
+  res.render('index', {client_url_path: app.locals.client_url_path});
 });
 
 app.get('/login', function (req, res) {
   if (req.session.user_id) {
     res.redirect('/');
   } else {
-    // todo: use template
-    res.sendfile('core/client/login.html');
+    res.render('login', {client_url_path: app.locals.client_url_path});
   }
 });
 

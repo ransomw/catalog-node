@@ -1,17 +1,15 @@
 <!DOCTYPE html>
-<!-- todo: make this a template and remove duplicate urls
-     between here and the routing defined in javascript -->
 <html lang="en" ng-app="node-catalog">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Catalog App</title>
     <link rel="stylesheet" type="text/css"
-          href="static/css/bootstrap.min.css">
+          href="{{client_url_path}}/css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css"
-          href="static/js/vendor/bower/spinkit/css/spinkit.css">
+          href="{{client_url_path}}/js/vendor/bower/spinkit/css/spinkit.css">
     <link rel="stylesheet" type="text/css"
-          href="static/css/style.css">
+          href="{{client_url_path}}/css/style.css">
 </head>
 <body>
 
@@ -34,13 +32,13 @@
   </div>
 
   <script
-     src="static/js/vendor/bower/jquery/dist/jquery.min.js">
+     src="{{client_url_path}}/js/vendor/bower/jquery/dist/jquery.min.js">
   </script>
   <script
-     src="static/js/bootstrap.min.js">
+     src="{{client_url_path}}/js/bootstrap.min.js">
   </script>
-  <script data-main="static/js/main"
-          src="static/js/vendor/bower/requirejs/require.js">
+  <script data-main="{{client_url_path}}/js/main"
+          src="{{client_url_path}}/js/vendor/bower/requirejs/require.js">
   </script>
 
 </body>
