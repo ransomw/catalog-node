@@ -19,7 +19,7 @@ var hbs = exphbs.create({
 });
 
 // todo: route module and url tree ... or some other pattern?
-//       search around
+//       search around.  also split routes into smaller modules
 // todo: shared error codes in json responses between client and server
 
 app.locals.config = config;

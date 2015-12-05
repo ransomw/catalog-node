@@ -23,62 +23,80 @@ app.get('/login', function (req, res) {
 });
 
 // todo: hash passwords
-// todo: make control-flow less messy
-app.post('/login', function (req, res) {
-  var req_keys = _.keys(req.body);
-  if (req_keys.indexOf('sign-in') !== -1) {
+var handle_sign_in = function (req, res) {
+  models.get_model(models.get_db(), models.User)
+    .findOne({where: {email: req.body.email}})
+    .then(function (user) {
+      if (user === null) {
+        res.status(HTTP_RES_CODE.client_err)
+          .json({error: "user record for email not found",
+                 data: req.body.email});
+      } else if (user.get('password') === null) {
+        res.status(HTTP_RES_CODE.client_err)
+          .json({error: ["user account created with third-party ",
+                         "service sign up locally or sign in with ",
+                         "third-party"].join('')});
+      } else if (user.get('password') === req.body.password) {
+        req.session.user_id = user.get('id');
+        res.redirect('/');
+      } else {
+        res.status(HTTP_RES_CODE.client_err)
+          .json({error: "bad password"});
+      }
+    }, function (err) {
+      res.status(HTTP_RES_CODE.server_err)
+        .json({error: err.toString()});
+    });
+};
+
+var handle_sign_up = function (req, res) {
+  if (req.body.password !== req.body['password-confirm']) {
+    res.status(HTTP_RES_CODE.client_err)
+      .json({error: "passwords don't match"});
+  } else {
+    // still not totally happy with this control-flow...
     models.get_model(models.get_db(), models.User)
       .findOne({where: {email: req.body.email}})
       .then(function (user) {
         if (user === null) {
-          res.status(HTTP_RES_CODE.client_err)
-            .json({error: "user record for email not found",
-                   data: req.body.email});
-        } else if (user.get('password') === null) {
-          res.status(HTTP_RES_CODE.client_err)
-            .json({error: ["user account created with third-party ",
-                           "service sign up locally or sign in with ",
-                           "third-party"].join('')});
-        } else if (user.get('password') === req.body.password) {
-          req.session.user_id = user.get('id');
-          res.redirect('/');
-        } else {
-          res.status(HTTP_RES_CODE.client_err)
-            .json({error: "bad password"});
-        }
-      });
-  } else if (req_keys.indexOf('sign-up') !== -1) {
-    if (req.body.password !== req.body['password-confirm']) {
-      res.status(HTTP_RES_CODE.client_err)
-        .json({error: "passwords don't match"});
-    } else {
-      models.get_model(models.get_db(), models.User)
-        .findOne({where: {email: req.body.email}})
-        .then(function (existing_user) {
-          if (existing_user === null) {
-            models.get_model(models.get_db(), models.User)
-              .create({
+          return models.get_model(models.get_db(), models.User)
+            .create({
               name: req.body.name,
               email: req.body.email,
               password: req.body.password
-            }).then(function (new_user) {
-              req.session.user_id = new_user.null;
-              res.redirect('/');
             });
-          } else if (existing_user.get('password') !== null) {
-            res.status(HTTP_RES_CODE.client_err)
-              .json({error: "user already registered"});
-          } else {
-            existing_user.updateAttributes({
-              name: req.body.name,
-              password: req.body.password
-            }).then(function () {
-              req.session.user_id = existing_user.get('id');
-              res.redirect('/');
-            });
-          }
+        }
+        if (user.get('password') !== null) {
+          res.status(HTTP_RES_CODE.client_err)
+            .json({error: "user already registered"});
+          return null; // null_wrap callbacks will pass
+        }
+        return user;
+      }).then(util.null_wrap(function (user) {
+        // sequelize weirdness: .null attr is id of newly-created item
+        if (user.null) {
+          return user;
+        }
+        return user.updateAttributes({
+          name: req.body.name,
+          password: req.body.password
         });
-    }
+      })).then(util.null_wrap(function (user) {
+        req.session.user_id = user.get('id') || user.null;
+        res.redirect('/');
+      }), function (err) {
+        res.status(HTTP_RES_CODE.server_err)
+          .json({error: err.toString()});
+      });
+  }
+};
+
+app.post('/login', function (req, res) {
+  var req_keys = _.keys(req.body);
+  if (req_keys.indexOf('sign-in') !== -1) {
+    handle_sign_in(req, res);
+  } else if (req_keys.indexOf('sign-up') !== -1) {
+    handle_sign_up(req, res);
   } else {
     res.status(HTTP_RES_CODE.client_err)
       .json({error: ["expected request to either specify ",
@@ -100,8 +118,6 @@ app.get('/user', function (req, res) {
           res.status(HTTP_RES_CODE.server_error)
             .json({error: "failed to look up user by id"});
         } else {
-          // todo: override toJSON on user model
-          //       so as not to send password
           res.json(user.toJSON());
         }
       });
@@ -116,15 +132,10 @@ app.get('/user', function (req, res) {
 var make_models_endpoint = function (model_def) {
   return function (req, res) {
     var model = models.get_model(models.get_db(), model_def);
-    // todo: edit control flow such that there's a single find-all
-    //       statement with an empty where object if the sequelize api
-    //       permits this being equivalent to the include all usage
     var query_params = _.keys(req.query);
-    // todo: don't use dataValues attribute directly.
-    //       try .get({plain: true}) or .toJSON
     var set_res = function (instances) {
       res.json(_.map(instances, function (instance) {
-        return instance.dataValues;
+        return instance.toJSON();
       }));
     };
     if (query_params.length === 0) {
