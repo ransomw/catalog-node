@@ -1,6 +1,8 @@
 var _ = require('lodash');
+var Sqlize = require('sequelize');
 var app = require('./index');
 var models = require('./models');
+var util = require('./util');
 
 var HTTP_RES_CODE = {
   client_err: 400,
@@ -108,7 +110,7 @@ app.get('/user', function (req, res) {
   }
 });
 
-// todo: support querying using comparisons...
+// todo: support querying using comparisons... after integration tests
 //       like ?createdAt__gt=val in URL and other typical querying stuff
 //       like ordering and restricting to a particular count
 var make_models_endpoint = function (model_def) {
@@ -120,26 +122,27 @@ var make_models_endpoint = function (model_def) {
     var query_params = _.keys(req.query);
     // todo: don't use dataValues attribute directly.
     //       try .get({plain: true}) or .toJSON
+    var set_res = function (instances) {
+      res.json(_.map(instances, function (instance) {
+        return instance.dataValues;
+      }));
+    };
     if (query_params.length === 0) {
       model.findAll({ include: [{ all: true }]})
-        .then(function (categories) {
-          res.json(_.map(categories, function (category) {
-            return category.dataValues;
-          }));
+        .then(function (instances) {
+          set_res(instances);
         });
     } else {
-      var category_params = _.keys(model.tableAttributes);
-      var invalid_params = _.difference(query_params, category_params);
+      var instance_params = _.keys(model.tableAttributes);
+      var invalid_params = _.difference(query_params, instance_params);
       if (invalid_params.length !== 0) {
         res.status(HTTP_RES_CODE.client_err)
           .json({error: "invalid query string parameters",
                  data: invalid_params});
       } else {
         model.findAll({where: req.query})
-          .then(function (categories) {
-            res.json(_.map(categories, function (category) {
-              return category.dataValues;
-            }));
+          .then(function (instances) {
+            set_res(instances);
           });
       }
     }
@@ -155,6 +158,7 @@ var api_login_req = function (req, res, next) {
   }
   res.status(HTTP_RES_CODE.auth_err)
     .json({error: "unauthorized"});
+  return next();
 };
 
 app.post('/api/item', api_login_req, function (req, res) {
@@ -168,68 +172,55 @@ app.post('/api/item', api_login_req, function (req, res) {
     });
 });
 
-/////
-// todo: remove duplicate code between update and delete
-
-// todo: read more about parameters
-//       http://webapplog.com/url-parameters-and-routing-in-express-js/
-app.post('/api/item/:id', api_login_req, function(req, res) {
-  var item_id = parseInt(req.params.id);
-  // todo: other checks/parsing for string to int in js?
-  if (isNaN(item_id) && item_id !== parseFloat(req.params.id)) {
+var make_instance_endpoint = function(model_def, action) {
+  return function(req, res) {
+    var instance_id = util.filter_int(req.params.id);
+    if (isNaN(instance_id) || instance_id < 0) {
       res.status(HTTP_RES_CODE.client_err)
-        .json({error: "item id must be an integer"});
-  } else {
-    // todo: more sensible promise-chaining
-    models.get_model(models.get_db(), models.Item)
-      .findById(item_id)
-      .then(function (item) {
-        if (item === null) {
-          res.status(HTTP_RES_CODE.client_err)
-            .json({error: "item lookup by id failed",
-                   data: item_id});
-        } else {
-          // todo: less DRY in which attributes get updated
-          item.updateAttributes({
-            title: req.body.title,
-            description: req.body.description,
-            category_id: req.body.category_id
-          }).then(function () {
+        .json({error: "instance id must be a non-negative integer"});
+    } else {
+      models.get_model(models.get_db(), model_def)
+        .findById(instance_id)
+        .then(function (instance) {
+          if (instance === null) {
+            return instance;
+          }
+          // not certain if passing the entire req to the action is
+          // the right level of abstraction...
+          return action(req, instance);
+        }).then(function (instance) {
+          if (instance !== null) {
             res.json({});
-          }, function (err) {
-            // todo: this might really be a client or server error
+          } else {
             res.status(HTTP_RES_CODE.client_err)
-              .json({error: err.toString()});
-          });
-        }
-      });
-  }
-});
+              .json({error: "model instance lookup by id failed",
+                     data: instance_id});
+          }
+        }, function (err) {
+          if (err instanceof Sqlize.ValidationError) {
+            res.status(HTTP_RES_CODE.client_err);
+          } else {
+            res.status(HTTP_RES_CODE.server_err);
+          }
+          res.json({error: err.toString()});
+        });
+    }
+  };
+};
 
-app.del('/api/item/:id', api_login_req, function(req, res) {
-  var item_id = parseInt(req.params.id);
-  // todo: other checks/parsing for string to int in js?
-  if (isNaN(item_id) && item_id !== parseFloat(req.params.id)) {
-      res.status(HTTP_RES_CODE.client_err)
-        .json({error: "item id must be an integer"});
-  } else {
-    models.get_model(models.get_db(), models.Item)
-      .findById(item_id)
-      .then(function (item) {
-        if (item === null) {
-          res.status(HTTP_RES_CODE.client_err)
-            .json({error: "item lookup by id failed",
-                   data: item_id});
-        } else {
-          item.destroy()
-            .then(function () {
-              res.json({});
-            }, function (err) {
-              // todo: this might really be a client or server error
-              res.status(HTTP_RES_CODE.client_err)
-                .json({error: err.toString()});
-            });
-        }
-      });
-  }
-});
+// could use app.param, tho with entire handler abstracted,
+// there's no duplicate code anyway
+app.post('/api/item/:id', api_login_req,
+         make_instance_endpoint(models.Item, function (req, item) {
+           return item.updateAttributes(
+             _.pick(req.body, [
+               'title',
+               'description',
+               'category_id'
+             ]));
+         }));
+
+app.del('/api/item/:id', api_login_req,
+         make_instance_endpoint(models.Item, function (req, item) {
+           return item.destroy();
+         }));
