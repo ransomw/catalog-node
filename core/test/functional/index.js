@@ -348,9 +348,20 @@ describe("functional tests", function() {
 
     var login = function (url) {
       var login_page;
-
+      var login_url = url;
+      // todo: duplicate (with sign_up) messy
+      //       see server/routes/auth.js for better promises
       return Q().then(function () {
-        return new cpages.LoginPage(client, url);
+        if (!login_url) {
+          return _get_login_url();
+        }
+        return null;
+      }).then(function (found_login_url) {
+        if (found_login_url !== null) {
+          login_url = found_login_url;
+        }
+      }).then(function () {
+        return new cpages.LoginPage(client, login_url);
       }).then(function (page) {
         login_page = page;
       }).then(function () {
@@ -413,8 +424,10 @@ describe("functional tests", function() {
           return sign_up_login(url(login_url));
         }).then(function () {
           return logout();
-          // todo: test logging back in
+        }).then(function () {
+          return login();
         });
+        // todo: test login w/ bad pass
       });
     });
 

@@ -1,11 +1,14 @@
 
 // maybe useful for promise chaining? feels hacky
 module.exports.null_wrap = function (fn) {
-  return function (res) {
-    if (res === null) {
-      return null;
+  return function () {
+    var i;
+    for (i = 0; i < arguments.length; i += 1) {
+      if (arguments[i] === null) {
+        return null;
+      }
     }
-    return fn(res);
+    return fn.apply(null, arguments);
   };
 };
 

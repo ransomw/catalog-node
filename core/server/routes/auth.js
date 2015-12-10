@@ -1,10 +1,14 @@
 var _ = require('lodash');
+var Q = require('q');
+var bcrypt = require('bcrypt');
 var models = require('../models');
 var CONST = require('../const');
 var util = require('../util');
 // todo: app import ought not be required
 var app_locals = require('../index').locals;
 var router = require('express').Router();
+
+var SALT_LEN = 8;
 
 /* make login required middleware
  * res_cb: callback fcn passed a res obj on unsuccessful login
@@ -19,31 +23,106 @@ var make_login_req_mw = function (res_cb) {
   };
 };
 
-// todo: hash passwords
 var handle_sign_in = function (req, res) {
-  models.get_model(models.get_db(), models.User)
-    .findOne({where: {email: req.body.email}})
-    .then(function (user) {
-      if (user === null) {
-        res.status(CONST.HTTP_RES_CODE.client_err)
-          .json({error: "user record for email not found",
-                 data: req.body.email});
-      } else if (user.get('password') === null) {
-        res.status(CONST.HTTP_RES_CODE.client_err)
-          .json({error: ["user account created with third-party ",
-                         "service sign up locally or sign in with ",
-                         "third-party"].join('')});
-      } else if (user.get('password') === req.body.password) {
+  var user_promise = Q().then(function () {
+    return models.get_model(models.get_db(), models.User)
+      .findOne({where: {email: req.body.email}});
+  });
+  var login_res_promise = user_promise.then(function (user) {
+    var deferred;
+    if (user === null) {
+      res.status(CONST.HTTP_RES_CODE.client_err)
+        .json({error: "user record for email not found",
+               data: req.body.email});
+      return null;
+    }
+    if (user.get('password') === null) {
+      res.status(CONST.HTTP_RES_CODE.client_err)
+        .json({error: ["user account created with third-party ",
+                       "service sign up locally or sign in with ",
+                       "third-party"].join('')});
+      return null;
+    }
+    deferred = Q.defer();
+    bcrypt.compare(
+      req.body.password, user.get('password'),
+      function (err, res) {
+        if (err) {
+          deferred.reject(err);
+        } else {
+          deferred.resolve(res);
+        }
+      });
+    return deferred.promise;
+  });
+  Q.all([user_promise, login_res_promise])
+    .spread(util.null_wrap(function (user, pass_is_correct) {
+      if (pass_is_correct) {
         req.session.user_id = user.get('id');
         res.redirect('/');
       } else {
         res.status(CONST.HTTP_RES_CODE.client_err)
           .json({error: "bad password"});
       }
-    }, function (err) {
+    })).catch(function (err) {
       res.status(CONST.HTTP_RES_CODE.server_err)
         .json({error: err.toString()});
     });
+};
+
+var handle_sign_up_pass_matched = function (req, res) {
+  var password_hash_promise = Q().then(function () {
+    var deferred = Q.defer();
+    bcrypt.hash(req.body.password, SALT_LEN, function(err, hash) {
+      if (err) {
+        deferred.reject(err);
+      } else {
+        deferred.resolve(hash);
+      }
+    });
+    return deferred.promise;
+  });
+  var user_promise = Q().then(function () {
+    return models.get_model(models.get_db(), models.User)
+      .findOne({where: {email: req.body.email}});
+  });
+  var create_user_promise = Q.all(
+    [password_hash_promise,
+     user_promise]).spread(function (password_hash, user) {
+       if (user === null) {
+         return models.get_model(models.get_db(), models.User)
+           .create({
+             name: req.body.name,
+             email: req.body.email,
+             password: password_hash
+           });
+       }
+       if (user.get('password') !== null) {
+         res.status(CONST.HTTP_RES_CODE.client_err)
+           .json({error: "user already registered"});
+         return null; // null_wrap callbacks will pass
+       }
+       return user;
+     });
+  Q.all(
+    [password_hash_promise,
+     create_user_promise]).spread(
+       util.null_wrap(function (password_hash, user) {
+         // sequelize weirdness: .null attr is id of newly-created item
+         if (user.null) {
+           return user;
+         }
+         return user.updateAttributes({
+           name: req.body.name,
+           password: password_hash
+         });
+       })).then(util.null_wrap(function (user) {
+         req.session.user_id = user.get('id') || user.null;
+         res.redirect('/');
+       })).catch(function (err) {
+         res.status(CONST.HTTP_RES_CODE.server_err)
+           .json({error: err.toString()});
+       });
 };
 
 var handle_sign_up = function (req, res) {
@@ -51,40 +130,7 @@ var handle_sign_up = function (req, res) {
     res.status(CONST.HTTP_RES_CODE.client_err)
       .json({error: "passwords don't match"});
   } else {
-    // still not totally happy with this control-flow...
-    models.get_model(models.get_db(), models.User)
-      .findOne({where: {email: req.body.email}})
-      .then(function (user) {
-        if (user === null) {
-          return models.get_model(models.get_db(), models.User)
-            .create({
-              name: req.body.name,
-              email: req.body.email,
-              password: req.body.password
-            });
-        }
-        if (user.get('password') !== null) {
-          res.status(CONST.HTTP_RES_CODE.client_err)
-            .json({error: "user already registered"});
-          return null; // null_wrap callbacks will pass
-        }
-        return user;
-      }).then(util.null_wrap(function (user) {
-        // sequelize weirdness: .null attr is id of newly-created item
-        if (user.null) {
-          return user;
-        }
-        return user.updateAttributes({
-          name: req.body.name,
-          password: req.body.password
-        });
-      })).then(util.null_wrap(function (user) {
-        req.session.user_id = user.get('id') || user.null;
-        res.redirect('/');
-      }), function (err) {
-        res.status(CONST.HTTP_RES_CODE.server_err)
-          .json({error: err.toString()});
-      });
+    handle_sign_up_pass_matched(req, res);
   }
 };
 
