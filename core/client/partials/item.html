@@ -8,11 +8,11 @@
     <p>Description: {{item.description}}</p>
     <!-- todo: only allow owners of items to edit -->
     <div ng-show="logged_in()">
-      <a href="#/catalog/{{item.title}}/edit">
+      <a href="#{{reverse('item-edit', {title: item.title})}}">
         Edit
       </a>
       |
-      <a href="#/catalog/{{item.title}}/delete">
+      <a href="#{{reverse('item-delete', {title: item.title})}}">
         Delete
       </a>
     </div>

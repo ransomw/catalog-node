@@ -1,6 +1,7 @@
 var angular = require('angular');
 var request = require('superagent');
 var CONST = require('./constants');
+var routes = require('./routes');
 
 var ENDPOINTS = {
   categories: '/api/categories',
@@ -17,6 +18,7 @@ var controllers = angular.module(
 
 var HeaderCtrl = function (
   $scope, $templateRequest, loginProvider) {
+  $scope.reverse = routes.reverse;
   $scope.loading = true;
   $scope.logged_in = loginProvider.logged_in;
   $scope.$watch(loginProvider.loading, function () {
@@ -31,6 +33,7 @@ var HeaderCtrl = function (
 controllers.controller('HomeCtrl', [
   '$scope', 'loginProvider', '$route',
   function HomeCtrl($scope, loginProvider, $route) {
+    $scope.reverse = routes.reverse;
     $scope.logged_in = loginProvider.logged_in;
     $scope.loading = true;
 
@@ -102,6 +105,7 @@ controllers.controller('RItemCtrl', [
     var item_title = $routeParams.itemTitle;
     var item;
 
+    $scope.reverse = routes.reverse;
     $scope.loading = true;
     $scope.logged_in = loginProvider.logged_in;
 

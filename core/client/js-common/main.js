@@ -4,9 +4,8 @@ var angular = require('angular');
 require('angular-route');
 var CONST = require('./constants');
 var controllers = require('./controllers');
+var routes = require('./routes');
 require('./services');
-
-// todo: look into reverse routing (like flask's url_for) in angular
 
 angular.element(document).ready(function () {
   var catalog_app = angular.module(CONST.APP_NAME, [
@@ -19,27 +18,12 @@ angular.element(document).ready(function () {
   catalog_app.config(
     ['$routeProvider',
      function($routeProvider) {
+
+       routes.defs.forEach(function (def) {
+         $routeProvider.when
+           .apply($routeProvider, routes.make_when_args(def));
+       });
        $routeProvider
-         .when('/', {
-           templateUrl: CONST.PARTIAL_BASE + 'home.html',
-           controller: 'HomeCtrl'
-         })
-         .when('/catalog/item/new', {
-           templateUrl: CONST.PARTIAL_BASE + 'item_add_edit.html',
-           controller: 'CUItemCtrl' // C for Create, U for Update
-         })
-         .when('/catalog/:title/edit', {
-           templateUrl: CONST.PARTIAL_BASE + 'item_add_edit.html',
-           controller: 'CUItemCtrl' // C for Create, U for Update
-         })
-         .when('/catalog/:title/delete', {
-           templateUrl: CONST.PARTIAL_BASE + 'item_delete.html',
-           controller: 'DItemCtrl' // D for Delete
-         })
-         .when('/catalog/:catName/:itemTitle', {
-           templateUrl: CONST.PARTIAL_BASE + 'item.html',
-           controller: 'RItemCtrl' // R for Read
-         })
          .otherwise({
            redirectTo: '/'
          });
