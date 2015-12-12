@@ -4,4 +4,4 @@
 
 watchify --debug \
          core/client/js-common/main.js \
-         -o core/client/js-common/bundle.js
+         -o core/client/js/bundle.js

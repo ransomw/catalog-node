@@ -19,8 +19,6 @@ services.factory('loginProvider', function() {
         throw new Error("couldn't get login status");
       }
       user = res.body;
-      console.log("set user as");
-      console.log(user);
       loading = false;
     });
 
