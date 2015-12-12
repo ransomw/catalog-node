@@ -1,13 +1,6 @@
-var angular = require('angular');
 var request = require('superagent');
-var CONST = require('./constants');
 
-// todo: handle all HTTP API calls through services
-//       and update login status using a module global
-
-var services = angular.module(CONST.APP_NAME + '.services', []);
-
-services.factory('loginProvider', function() {
+module.exports = function () {
 
   var loading = true;
   var user;
@@ -34,4 +27,4 @@ services.factory('loginProvider', function() {
     logged_in: logged_in,
     loading: is_loading
   };
-});
+};

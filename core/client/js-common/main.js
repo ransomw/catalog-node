@@ -6,7 +6,7 @@ var CONST = require('./constants');
 require('./controllers_main');
 var controllers = require('./controllers');
 var routes = require('./routes');
-require('./services');
+require('./services_main');
 
 angular.element(document).ready(function () {
   var catalog_app = angular.module(CONST.APP_NAME, [

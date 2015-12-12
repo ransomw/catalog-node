@@ -40,25 +40,26 @@ var make_models_endpoint = function (model_def) {
   };
 };
 
-router.get('/categories', make_models_endpoint(models.Category));
-router.get('/items', make_models_endpoint(models.Item));
-
 var api_login_req = make_login_req_mw(function (res) {
   res.status(CONST.HTTP_RES_CODE.auth_err)
     .json({error: "unauthorized"});
 });
 
-router.post('/item', api_login_req, function (req, res) {
-    models.get_model(models.get_db(), models.Item)
-    .create(req.body)
-    .then(function (new_item) {
-      res.json({});
-    }, function (err) {
-      res.status(CONST.HTTP_RES_CODE.client_err)
-        .json({error: err.toString()});
-    });
-});
+/* create */
+var make_model_endpoint = function(model_def) {
+  return function (req, res) {
+    models.get_model(models.get_db(), model_def)
+      .create(req.body)
+      .then(function (new_instance) {
+        res.json({});
+      }, function (err) {
+        res.status(CONST.HTTP_RES_CODE.client_err)
+          .json({error: err.toString()});
+      });
+  };
+};
 
+/* update, delete */
 var make_instance_endpoint = function(model_def, action) {
   return function(req, res) {
     var instance_id = util.filter_int(req.params.id);
@@ -94,6 +95,12 @@ var make_instance_endpoint = function(model_def, action) {
     }
   };
 };
+
+
+router.get('/categories', make_models_endpoint(models.Category));
+router.get('/items', make_models_endpoint(models.Item));
+
+router.post('/item', api_login_req, make_model_endpoint(models.Item));
 
 // could use router.param, tho with entire handler abstracted,
 // there's no duplicate code anyway

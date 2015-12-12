@@ -27,4 +27,10 @@ module.exports.spread = function (arr, fn) {
   });
 };
 
+module.exports.sort_items_updated_at = function (i1, i2) {
+  var t1 = new Date(i1.updatedAt);
+  var t2 = new Date(i2.updatedAt);
+  return t1.getTime() - t2.getTime();
+};
+
 module.exports.freeze = deepFreeze;

@@ -1,15 +1,14 @@
-var request = require('superagent');
-var CONST = require('../constants');
+var Q = require('q');
 var routes = require('../routes');
+var util = require('../util');
 
 // todo: nested views
 // todo: custom filter for items
-// todo: service/factory for data
 // todo: frontend routing like python app when categories are clicked
 
 module.exports = [
-  '$scope', 'loginProvider', '$route',
-  function HomeCtrl($scope, loginProvider, $route) {
+  '$scope', 'loginProvider', '$route', 'catalogProvider',
+  function HomeCtrl($scope, loginProvider, $route, catalog) {
     $scope.reverse = routes.reverse;
     $scope.logged_in = loginProvider.logged_in;
     $scope.loading = true;
@@ -46,27 +45,14 @@ module.exports = [
       ].join(' ');
     };
 
-    request.get(CONST.ENDPOINTS.categories)
-      .accept('json')
-      .end(function (err, res) {
+    // categories must be populated before items
+    Q.all([catalog.get_categories(), catalog.get_items()])
+      .spread(function (cats, items_update) {
+        items = items_update.sort(util.sort_items_updated_at);
         $scope.$apply(function () {
-          $scope.categories = res.body;
-          // ensure categories populated before items
-          // since we need to get category name before displaying
-          // item info in the view
-          request.get(CONST.ENDPOINTS.items)
-            .accept('json')
-            .end(function (err, res) {
-              items = res.body.sort(function (i1, i2) {
-                var t1 = new Date(i1.updatedAt);
-                var t2 = new Date(i2.updatedAt);
-                return t1.getTime() - t2.getTime();
-              });
-              $scope.$apply(function () {
-                $scope.items = items;
-                $scope.loading = false;
-              });
-            });
+          $scope.categories = cats;
+          $scope.items = items;
+          $scope.loading = false;
         });
       });
 
