@@ -97,14 +97,17 @@ var make_instance_endpoint = function(model_def, action) {
 };
 
 
-router.get('/categories', make_models_endpoint(models.Category));
-router.get('/items', make_models_endpoint(models.Item));
+router.get(CONST.API_ENDPOINTS.categories,
+                 make_models_endpoint(models.Category));
+router.get(CONST.API_ENDPOINTS.items,
+                 make_models_endpoint(models.Item));
 
-router.post('/item', api_login_req, make_model_endpoint(models.Item));
+router.post(CONST.API_ENDPOINTS.item,
+                  api_login_req, make_model_endpoint(models.Item));
 
 // could use router.param, tho with entire handler abstracted,
 // there's no duplicate code anyway
-router.post('/item/:id', api_login_req,
+router.post(CONST.API_ENDPOINTS.item + '/:id', api_login_req,
          make_instance_endpoint(models.Item, function (req, item) {
            return item.updateAttributes(
              _.pick(req.body, [
@@ -114,7 +117,7 @@ router.post('/item/:id', api_login_req,
              ]));
          }));
 
-router.delete('/item/:id', api_login_req,
+router.delete(CONST.API_ENDPOINTS.item + '/:id', api_login_req,
          make_instance_endpoint(models.Item, function (req, item) {
            return item.destroy();
          }));

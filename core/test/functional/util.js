@@ -1,6 +1,10 @@
-var assert = require('chai').assert;
+var path = require('path');
 var _ = require('lodash');
 var Q = require('q');
+
+var TEST_DIR = global.M_ARGS.test_dir;
+var PROJ_ROOT = path.join(TEST_DIR, '../../..');
+var cutil = require(PROJ_ROOT + '/core/common/util');
 
 module.exports.set_eq = function (arr1, arr2) {
   var sarr1 = _.uniq(arr1);
@@ -9,13 +13,7 @@ module.exports.set_eq = function (arr1, arr2) {
     _.intersection(sarr1, sarr2).length === sarr1.length;
 };
 
-module.exports.arr_elem = function(arr) {
-  assert.ok(Array.isArray(arr),
-            "arr_elem expects array argument");
-  assert.equal(arr.length, 1,
-               "expected exactly one element");
-  return arr[0];
-};
+module.exports.arr_elem = cutil.arr_elem;
 
 // fn may return a value or a promise
 module.exports.promise_seq_do = function (arr, fn) {

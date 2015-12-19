@@ -1,11 +1,12 @@
 var request = require('superagent');
+var CONST = require('../constants');
 
 module.exports = function () {
 
   var loading = true;
   var user;
 
-  request.get('/user')
+  request.get(CONST.AUTH_ENDPOINTS.user)
     .accept('json')
     .end(function (err, res) {
       if (err) {

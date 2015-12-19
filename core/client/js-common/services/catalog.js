@@ -57,12 +57,12 @@ var make_delete_model = function (endpoint) {
   };
 };
 
-var get_categories = make_get_models(CONST.ENDPOINTS.categories);
-var get_items = make_get_models(CONST.ENDPOINTS.items);
+var get_categories = make_get_models(CONST.API_ENDPOINTS.categories);
+var get_items = make_get_models(CONST.API_ENDPOINTS.items);
 
-var create_item = make_create_model(CONST.ENDPOINTS.item_new);
-var update_item = make_update_model(CONST.ENDPOINTS.item_new);
-var delete_item = make_delete_model(CONST.ENDPOINTS.item_new);
+var create_item = make_create_model(CONST.API_ENDPOINTS.item);
+var update_item = make_update_model(CONST.API_ENDPOINTS.item);
+var delete_item = make_delete_model(CONST.API_ENDPOINTS.item);
 
 module.exports = function () {
   return {

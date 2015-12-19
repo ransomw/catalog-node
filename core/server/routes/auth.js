@@ -134,7 +134,7 @@ var handle_sign_up = function (req, res) {
   }
 };
 
-router.get('/login', function (req, res) {
+router.get(CONST.AUTH_ENDPOINTS.login, function (req, res) {
   if (req.session.user_id) {
     res.redirect('/');
   } else {
@@ -142,7 +142,7 @@ router.get('/login', function (req, res) {
   }
 });
 
-router.post('/login', function (req, res) {
+router.post(CONST.AUTH_ENDPOINTS.login, function (req, res) {
   var req_keys = _.keys(req.body);
   if (req_keys.indexOf('sign-in') !== -1) {
     handle_sign_in(req, res);
@@ -155,12 +155,12 @@ router.post('/login', function (req, res) {
   }
 });
 
-router.get('/logout', function (req, res) {
+router.get(CONST.AUTH_ENDPOINTS.logout, function (req, res) {
   req.session.user_id = undefined;
   res.redirect('/');
 });
 
-router.get('/user', function (req, res) {
+router.get(CONST.AUTH_ENDPOINTS.user, function (req, res) {
   if (req.session.user_id) {
     models.get_model(models.get_db(), models.User)
       .findById(req.session.user_id)

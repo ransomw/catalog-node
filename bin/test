@@ -4,6 +4,10 @@ var Mocha = require('mocha');
 var fs = require('fs');
 var path = require('path');
 
+var capp = require('../core');
+
+capp.browserify_build();
+
 var mocha = new Mocha({
   timeout: 50000
 });

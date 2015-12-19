@@ -4,6 +4,7 @@ var session = require('express-session');
 var exphbs  = require('express-handlebars');
 var bodyParser = require('body-parser');
 var config = require('./config');
+var CONST = require('./const');
 
 var VIEWS_DIR = path.join(process.cwd(), 'core', 'server', 'views');
 
@@ -22,7 +23,7 @@ var hbs = exphbs.create({
 // todo: shared error codes in json responses between client and server
 
 app.locals.config = config;
-app.locals.client_url_path = '/static';
+app.locals.client_url_path = CONST.CLIENT_STATIC_URL;
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded());
@@ -33,7 +34,8 @@ app.use(session({
   cookie: {}
 }));
 
-app.use(app.locals.client_url_path, express.static('core/client'));
+app.use(app.locals.client_url_path,
+        express.static(CONST.CLIENT_STATIC_DIR));
 
 app.engine('hbs', hbs.engine);
 app.set('view engine', 'hbs');
