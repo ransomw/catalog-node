@@ -21,12 +21,12 @@ module.exports.watchify_build = function () {
   });
 
   var bundle = function () {
+    // console.log("writing client bundle");
     bfy.bundle().pipe(fs.createWriteStream(PATH_CLIENT_BUNDLE));
   };
 
   bfy.on('update', bundle);
   bundle();
-
 };
 
 module.exports.browserify_build = function () {

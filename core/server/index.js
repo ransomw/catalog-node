@@ -26,12 +26,13 @@ app.locals.config = config;
 app.locals.client_url_path = CONST.CLIENT_STATIC_URL;
 
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded());
+app.use(bodyParser.urlencoded({extended: true}));
 
-// todo: not suitable for production
 app.use(session({
-  secret: 'super secret',
-  cookie: {}
+  secret: 'super secret', // todo: not suitable for production
+  cookie: {},
+  resave: false,
+  saveUninitialized: false
 }));
 
 app.use(app.locals.client_url_path,
