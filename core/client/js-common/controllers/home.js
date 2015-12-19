@@ -3,8 +3,9 @@ var routes = require('../routes');
 var util = require('../util');
 
 // todo: nested views
-// todo: custom filter for items
+// todo: custom filter for items ... after integration tests
 // todo: frontend routing like python app when categories are clicked
+// todo: use anon fn here and in all other controller defns
 
 module.exports = [
   '$scope', 'loginProvider', '$route', 'catalogProvider',

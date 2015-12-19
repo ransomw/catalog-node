@@ -1,6 +1,4 @@
 
-// todo: form validation
-
 module.exports = [
   '$scope', '$location', '$routeParams', 'catalogProvider',
   function DItemCtrl($scope, $location, $routeParams, catalog) {

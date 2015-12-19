@@ -22,6 +22,7 @@ var get_defs = (function () {
         };
       }());
 
+      // todo: move template extension to get_when_args
       defs = [
         {url: '/',
          name: 'home',
