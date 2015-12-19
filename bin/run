@@ -3,6 +3,7 @@
 var capp = require('../core');
 
 capp.populate_client_static();
+capp.watch_styles();
 capp.watchify_build();
 capp.run_server();
 
