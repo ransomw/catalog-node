@@ -1,4 +1,6 @@
 var fs = require('fs');
+var fse = require('fs-extra');
+var Q = require('q');
 var path = require('path');
 var browserify = require('browserify');
 var watchify = require('watchify');
@@ -7,9 +9,19 @@ var app = require('./server');
 var CONST = require('./common/const');
 
 var PATH_CLIENT_MAIN = path.join(
-  'core', 'client', 'js-common', 'main.js');
+  'core', 'client', 'js', 'main.js');
 var PATH_CLIENT_BUNDLE = path.join(
   CONST.CLIENT_STATIC_DIR , 'js', 'bundle.js');
+var PATH_CLIENT_STATIC_SRC = path.join(
+  'core', 'client', 'static');
+
+module.exports.populate_client_static = function () {
+  var deferred = Q.defer();
+  if (fs.existsSync(CONST.CLIENT_STATIC_DIR)) {
+    fse.removeSync(CONST.CLIENT_STATIC_DIR);
+  }
+  fse.copySync(PATH_CLIENT_STATIC_SRC, CONST.CLIENT_STATIC_DIR);
+};
 
 module.exports.watchify_build = function () {
   var bfy = browserify({

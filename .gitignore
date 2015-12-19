@@ -1,5 +1,5 @@
 *~
 node_modules/
-core/client/js/vendor/bower/
+core/client/static/js/vendor/bower/
 catalog.db
-core/client/js/bundle.js
+client_build/

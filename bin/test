@@ -6,6 +6,7 @@ var path = require('path');
 
 var capp = require('../core');
 
+capp.populate_client_static();
 capp.browserify_build();
 
 var mocha = new Mocha({
