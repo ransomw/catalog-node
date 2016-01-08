@@ -19,4 +19,5 @@ module.exports.arr_elem = function(arr) {
   return arr[0];
 };
 
-module.exports.freeze = deepFreeze;
+// module.exports.freeze = deepFreeze;
+module.exports.freeze = require('deep-freeze');

@@ -18,7 +18,9 @@ var PATH_GEN_STYLES = path.join(
 var PATH_CLIENT = path.join(
   'core', 'client');
 var PATH_CLIENT_MAIN = path.join(
-  PATH_CLIENT, 'js', 'main.js');
+  PATH_CLIENT, 'angular', 'js', 'main.js');
+var PATH_CLIENT_PARTIALS = path.join(
+  PATH_CLIENT, 'angular', 'partials');
 var PATH_CLIENT_STATIC_SRC = path.join(
   PATH_CLIENT, 'static');
 var PATH_SRC_STYLES = path.join(
@@ -71,7 +73,7 @@ var build_styles = function () {
   });
 };
 
-module.exports.watch_styles = function () {
+var watch_styles = function () {
   build_styles().then(function () {
     fs.watch(PATH_SRC_STYLES, function () {
       build_styles();
@@ -79,37 +81,67 @@ module.exports.watch_styles = function () {
   });
 };
 
-module.exports.build_styles = build_styles;
-
-module.exports.populate_client_static = function () {
-  if (fs.existsSync(CONST.CLIENT_STATIC_DIR)) {
-    fse.removeSync(CONST.CLIENT_STATIC_DIR);
-  }
-  fse.copySync(PATH_CLIENT_STATIC_SRC, CONST.CLIENT_STATIC_DIR);
+var make_populate_dir = function (src, dest) {
+  return function () {
+    if (fs.existsSync(dest)) {
+      fse.removeSync(dest);
+    }
+    fse.copySync(src, dest);
+  };
 };
 
-module.exports.watchify_build = function () {
+var populate_client_static = function () {
+  (make_populate_dir(
+    PATH_CLIENT_STATIC_SRC, CONST.CLIENT_STATIC_DIR)());
+  (make_populate_dir(
+    PATH_CLIENT_PARTIALS,
+    path.join(CONST.CLIENT_STATIC_DIR, 'partials'))());
+};
+
+var make_write_bundle = function (bfy, path_bundle) {
+  return function () {
+    var deferred = Q.defer();
+    var stream_bundle = bfy.bundle();
+    stream_bundle.pipe(fs.createWriteStream(path_bundle));
+    stream_bundle.on('end', function () {
+      deferred.resolve();
+    });
+    return deferred.promise;
+  };
+};
+
+var build_client_js = function (cts) {
   var bfy = browserify({
     entries: [PATH_CLIENT_MAIN],
     cache: {},
     packageCache: {},
     debug: true, // source maps
-    plugin: [watchify]
+    plugin: cts ? [watchify] : []
   });
-
-  var bundle = function () {
-    // console.log("writing client bundle");
-    bfy.bundle().pipe(fs.createWriteStream(PATH_CLIENT_BUNDLE));
-  };
-
-  bfy.on('update', bundle);
-  bundle();
+  var write_bundle = make_write_bundle(bfy, PATH_CLIENT_BUNDLE);
+  if (cts) {
+    bfy.on('update', write_bundle);
+  }
+  return write_bundle();
 };
 
-module.exports.browserify_build = function () {
-  var b = browserify();
-  b.add(PATH_CLIENT_MAIN);
-  b.bundle().pipe(fs.createWriteStream(PATH_CLIENT_BUNDLE));
+
+/* opts
+ * cts: continuous build
+ */
+module.exports.build_client = function (opt_args) {
+  var opts = opt_args || {};
+  populate_client_static();
+  if (opts.cts) {
+    watch_styles();
+    return build_client_js(true);
+  } else {
+    return Q().then(function () {
+      return build_client_js();
+    }).then(function () {
+      return build_styles();
+    });
+  }
 };
 
 module.exports.run_server = function () {

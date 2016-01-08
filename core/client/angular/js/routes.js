@@ -68,6 +68,10 @@ var get_when_args = function () {
 };
 
 // mutable state ftl T_-
+/* name: route name str matching route def
+ * params_arg: obj with k-v pairs {'param': val},
+ *             with 'param' matching :param in url string
+ */
 var reverse = function (name, params_arg) {
   var params = params_arg || {};
   var def = util.arr_elem(get_defs().filter(function (def) {

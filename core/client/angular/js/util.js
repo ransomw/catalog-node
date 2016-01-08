@@ -1,7 +1,9 @@
 var _ = require('lodash');
 var assert = require('chai').assert;
-
-var cutil = require('../../common/util');
+// todo: browserify breaks when using base path from constants module
+// var CONST = require('./constants');
+// var cutil = require(CONST.COMMON_MODULE_PATH + '/util');
+var cutil = require('../../../common/util');
 
 module.exports.arr_elem = cutil.arr_elem;
 

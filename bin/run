@@ -1,9 +1,18 @@
 // -*-js2-*-
 
+var Q = require('q');
 var capp = require('../core');
+var argv = require('yargs')
+      .options({
+        'c': {
+          desc: "continuous build",
+          type: 'boolean'
+        }
+      })
+      .argv;
 
-capp.populate_client_static();
-capp.watch_styles();
-capp.watchify_build();
-capp.run_server();
-
+Q().then(function () {
+  return capp.build_client({cts: argv.c});
+}).then(function () {
+  return capp.run_server();
+});
