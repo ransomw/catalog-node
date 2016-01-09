@@ -16,8 +16,17 @@ var AUTH_ENDPOINTS = {
 
 util.freeze(AUTH_ENDPOINTS);
 
+var CLIENTS = {
+  ANGULAR: 'angular',
+  EMBER: 'ember'
+};
+
+util.freeze(CLIENTS);
+
 var CONST = {};
 
+CONST.CLIENTS = CLIENTS;
+CONST.DEFAULT_CLIENT = CLIENTS.ANGULAR;
 CONST.CLIENT_STATIC_URL = '/static';
 CONST.CLIENT_STATIC_DIR = 'client_build';
 CONST.API_ENDPOINTS = API_ENDPOINTS;

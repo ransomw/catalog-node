@@ -1,10 +1,24 @@
 // -*-js2-*-
 
-var Mocha = require('mocha');
 var fs = require('fs');
 var path = require('path');
-
+var Mocha = require('mocha');
+var Q = require('q');
+var _ = require('lodash');
 var capp = require('../core');
+var CONST = require('../core/common/const');
+
+var argv = require('yargs')
+      .options({
+        'f': {
+          desc: "frontend client",
+          type: 'string',
+          choices: _.values(CONST.CLIENTS),
+          default: CONST.CLIENTS.ANGULAR
+        }
+      })
+      .argv;
+
 
 var mocha = new Mocha({
   timeout: 50000
@@ -15,14 +29,17 @@ var mocha = new Mocha({
 //       we're still loading a file rather than a module, so
 // M is for Mocha
 global.M_ARGS = {
-  test_dir: path.resolve('./core/test/functional')
+  test_dir: path.resolve('./core/test/functional'),
+  argv: argv
 };
 
 mocha.addFile(
   path.join(global.M_ARGS.test_dir, 'index.js')
 );
 
-capp.build_client().then(function () {
+Q().then(function () {
+  return capp.build_client();
+}).then(function () {
   mocha.run(function(failures){
     process.on('exit', function () {
       process.exit(failures);

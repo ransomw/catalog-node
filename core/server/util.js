@@ -1,6 +1,9 @@
+var _ = require('lodash');
+var cutil = require('../common/util');
 
+var util = {};
 // maybe useful for promise chaining? feels hacky
-module.exports.null_wrap = function (fn) {
+util.null_wrap = function (fn) {
   return function () {
     var i;
     for (i = 0; i < arguments.length; i += 1) {
@@ -13,8 +16,10 @@ module.exports.null_wrap = function (fn) {
 };
 
 // as suggested on mdn's parseInt page
-module.exports.filter_int = function (val) {
+util.filter_int = function (val) {
   if(/^(\-|\+)?([0-9]+)$/.test(val))
     return Number(val);
   return NaN;
 };
+
+module.exports = _.merge(cutil, util);

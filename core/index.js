@@ -126,10 +126,12 @@ var build_client_js = function (cts) {
 };
 
 
-/* opts
- * cts: continuous build
+/* client - one of CONST.CLIENTS values
+ * opts -
+ *  cts: continuous build
  */
-module.exports.build_client = function (opt_args) {
+module.exports.build_client = function (client, opt_args) {
+  // todo: XXX build ember client
   var opts = opt_args || {};
   populate_client_static();
   if (opts.cts) {
@@ -144,9 +146,11 @@ module.exports.build_client = function (opt_args) {
   }
 };
 
-module.exports.run_server = function () {
+module.exports.run_server = function (client) {
   var port = process.env.PORT || 3000;
-  var server = app.listen(port, function () {
+  var server;
+  app.locals.config.CLIENT = client;
+  server = app.listen(port, function () {
     console.log("app running on port " + port);
   });
 };

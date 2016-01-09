@@ -22,6 +22,7 @@ var CD_PORT = config.CD_PORT;
 var APP_PORT = process.env.PORT || 3001;
 var APP_URL = 'http://localhost';
 
+var argv = global.M_ARGS.argv;
 
 tmp.setGracefulCleanup();
 
@@ -130,6 +131,7 @@ describe("functional tests", function() {
       return init_db();
     }).then(function () {
       var deferred = Q.defer();
+      app.locals.config.CLIENT = argv.f;
       server = app.listen(APP_PORT, function () {
         deferred.resolve();
       });

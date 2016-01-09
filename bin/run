@@ -1,18 +1,32 @@
 // -*-js2-*-
 
 var Q = require('q');
+var _ = require('lodash');
 var capp = require('../core');
+var CONST = require('../core/common/const');
+
 var argv = require('yargs')
       .options({
         'c': {
           desc: "continuous build",
           type: 'boolean'
+        },
+        'f': {
+          desc: "frontend client",
+          type: 'string',
+          choices: _.values(CONST.CLIENTS),
+          default: CONST.CLIENTS.ANGULAR
         }
       })
       .argv;
 
+// todo: port as cli arg
+
+var client = argv.f;
+
 Q().then(function () {
-  return capp.build_client({cts: argv.c});
+  return capp.build_client(client, {cts: argv.c});
 }).then(function () {
-  return capp.run_server();
+  console.log("client build finished");
+  return capp.run_server(client);
 });
