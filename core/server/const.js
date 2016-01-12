@@ -25,14 +25,4 @@ CONST.HTTP_RES_CODE = {
 // CONST.AUTH_ENDPOINTS = CCONST.AUTH_ENDPOINTS;
 // CONST.AUTH_BASE = CCONST.AUTH_BASE;
 
-// todo: b/c lodash 3 doesn't support immutability, this merge
-//       overwrites server constants with common constants
-//       it'd be better to overwrite common with server-specific
-// in the meantime, make certain no keys are in common
-var common_keys = _.intersection(_.keys(CONST), _.keys(CCONST));
-if (common_keys.length !== 0) {
-  throw new Error("programming error: " +
-                  "server attempting to overwrite constants '" +
-                  common_keys.toString());
-}
-module.exports = util.freeze(_.merge(CONST, CCONST));
+module.exports = util.freeze(_.merge(CCONST, _.cloneDeep(CONST)));
