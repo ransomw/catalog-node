@@ -1,0 +1,79 @@
+[
+  {
+    "name": "Soccer",
+    "items": [
+      {
+        "title": "Two shinguards",
+        "description": "Prevent injuries resulting from kicks to the shin"
+      },
+      {
+        "title": "Shinguards",
+        "description": "Prevent injuries resulting from kicks to the shin"
+      },
+      {
+        "title": "Jersey",
+        "description": "World Cup 2014 commemorative jersey"
+      },
+      {
+        "title": "Soccer Cleats",
+        "description": "Nike cleats"
+      }
+    ]
+  },
+  {
+    "name": "Basketball",
+    "items": []
+  },
+  {
+    "name": "Baseball",
+    "items": [
+      {
+        "title": "Bat",
+        "description": "Louisville slugger"
+      }
+    ]
+  },
+  {
+    "name": "Frisbee",
+    "items": [
+      {
+        "title": "Frisbee",
+        "description": "A flying disc"
+      }
+    ]
+  },
+  {
+    "name": "Snowboarding",
+    "items": [
+      {
+        "title": "Goggles",
+        "description": "Keep the snow out of your eyes"
+      },
+      {
+        "title": "Snowboard",
+        "description": "Type-A vintage"
+      }
+    ]
+  },
+  {
+    "name": "Rock Climbing",
+    "items": []
+  },
+  {
+    "name": "Foosball",
+    "items": []
+  },
+  {
+    "name": "Skating",
+    "items": []
+  },
+  {
+    "name": "Hockey",
+    "items": [
+      {
+        "title": "Stick",
+        "description": "A hockey stick"
+      }
+    ]
+  }
+]
