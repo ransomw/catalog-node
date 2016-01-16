@@ -1,6 +1,6 @@
 var _ = require('lodash');
 var Sqlize = require('sequelize');
-var router = require('express').Router();
+var router = require('../express_ext').Router();
 var models = require('../models');
 var CONST = require('../const');
 var util = require('../util');

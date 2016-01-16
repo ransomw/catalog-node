@@ -1,5 +1,5 @@
 var path = require('path');
-var express = require('express');
+var express = require('./express_ext');
 var session = require('express-session');
 var exphbs  = require('express-handlebars');
 var bodyParser = require('body-parser');

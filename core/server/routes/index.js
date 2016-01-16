@@ -20,5 +20,5 @@ app.get('/', function (req, res) {
              {client_url_path: app.locals.client_url_path});
 });
 
-app.use(CONST.AUTH_BASE, auth);
-app.use(CONST.API_BASE, api);
+app.register_router(CONST.AUTH_BASE, auth);
+app.register_router(CONST.API_BASE, api);

@@ -22,6 +22,18 @@ var get_model = function(db_conn, model_def) {
   return db_conn.define.apply(db_conn, model_def);
 };
 
+/* exposed model api
+ *
+ * .findOne({where: {field: val}})
+ *   - returns null when record not found
+ * .create({field: val, ...})
+ * .findById(id)
+ *
+ * exposed model instance api
+ *
+ * .get('field')
+ */
+
 module.exports.User = _User;
 module.exports.Category = _Category;
 module.exports.Item = _Item;

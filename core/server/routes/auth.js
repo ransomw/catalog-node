@@ -4,11 +4,11 @@ var bcrypt = require('bcrypt');
 var models = require('../models');
 var CONST = require('../const');
 var util = require('../util');
-// todo: app import ought not be required
-var app_locals = require('../index').locals;
-var router = require('express').Router();
+var router = new require('../express_ext').Router();
 
 var SALT_LEN = 8;
+
+var client_url_path;
 
 /* make login required middleware
  * res_cb: callback fcn passed a res obj on unsuccessful login
@@ -138,7 +138,7 @@ router.get(CONST.AUTH_ENDPOINTS.login, function (req, res) {
   if (req.session.user_id) {
     res.redirect('/');
   } else {
-    res.render('login', {client_url_path: app_locals.client_url_path});
+    res.render('login', {client_url_path: client_url_path});
   }
 });
 
@@ -176,6 +176,17 @@ router.get(CONST.AUTH_ENDPOINTS.user, function (req, res) {
     res.json(null);
   }
 });
+
+router.on_register = function (app) {
+  if (typeof app.locals.client_url_path === 'undefined') {
+    throw new Error("app using auth router must define " +
+                    "'client_url_path' in locals");
+  } else if (typeof app.locals.client_url_path !== 'string') {
+    throw new Error("app.locals.client_url_path not string type");
+  } else {
+    client_url_path = app.locals.client_url_path;
+  }
+};
 
 module.exports.router = router;
 module.exports.make_login_req_mw = make_login_req_mw;
