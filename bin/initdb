@@ -2,5 +2,10 @@
 
 var app = require('../core');
 
-app.init_db().done();
+app.init_db().then(function () {
+  console.log("initialized database");
+}, function (err) {
+  console.log("database init error");
+  console.log(err);
+});
 

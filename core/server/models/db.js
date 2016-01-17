@@ -1,27 +1,40 @@
 var _ = require('lodash');
 var Sqlize = require('sequelize');
-// unlike Flask, there's no application context stack
-// Koa might have something similar?
-var app = require('../index');
 
-var sqlite_path;
+// consider managing multiple database connections in this module
+var db_state = {
+  sqlite_path: undefined,
+  conn: undefined
+};
 
-var connect_db = function () {
-  sqlite_path = app.locals.config.SQLITE_PATH;
+var connect_db = function (sqlite_path) {
+  db_state.sqlite_path = sqlite_path;
   return new Sqlize(null, null, null, {
     dialect: 'sqlite',
-    storage: sqlite_path,
+    storage: db_state.sqlite_path,
     logging: function (msg) { }
   });
 };
 
 
-var get_db = function () {
-  if (!app.locals.db_conn ||
-      sqlite_path !== app.locals.config.SQLITE_PATH) {
-    app.locals.db_conn = connect_db();
+var get_db = function (opt_args) {
+  var opts = opt_args || {};
+  var sqlite_path;
+  if (typeof opts.sqlite_path === 'undefined') {
+    throw new Error("undefined sqlite path");
+  } else if (typeof opts.sqlite_path !== 'string') {
+    throw new Error("sqlite path should be string");
+  } else {
+    sqlite_path = opts.sqlite_path;
   }
-  return app.locals.db_conn;
+  if (!db_state.conn || db_state.sqlite_path !== sqlite_path) {
+    db_state.conn = connect_db(sqlite_path);
+  }
+  return db_state.conn;
 };
 
-module.exports.get_db = get_db;
+var exports = {};
+
+exports.get_db = get_db;
+
+module.exports = exports;

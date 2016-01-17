@@ -7,7 +7,7 @@ var browserify = require('browserify');
 var watchify = require('watchify');
 var less = require('less');
 
-var app = require('./server');
+var catalog_server = require('./server');
 var models = require('./server/models'); // needs to be after app import
 var CONST = require('./common/const');
 
@@ -151,22 +151,9 @@ exports.build_client = function (client, opt_args) {
 exports.run_server = function (config_arg, port_arg) {
   var config = config_arg || {};
   var port = port_arg || process.env.PORT || 3000;
-  var server;
+  var app = catalog_server.make_app(config);
   var deferred = Q.defer();
-  var unallowed_config = _.difference(
-    config,
-    ['SERVER', 'SQLITE_PATH']);
-  if (unallowed_config.length !== 0) {
-    throw new Error("unallowed config keys: " + unallowed_config);
-  }
-  _.merge(app.locals.config, _.omit(config, ['SQLITE_PATH']));
-  if (config.SQLITE_PATH &&
-      app.locals.config.SQLITE_PATH !== config.SQLITE_PATH) {
-    throw new Error(
-      "unexpected sqlite path.  got '" + config.SQLITE_PATH +
-        "' expected '" + app.locals.config.SQLITE_PATH);
-  }
-  server = app.listen(port, function () {
+  var server = app.listen(port, function () {
     deferred.resolve({server: server, port: port});
   });
   server.on('error', function (err) {
@@ -177,11 +164,16 @@ exports.run_server = function (config_arg, port_arg) {
 
 exports.init_db = function (opt_args) {
   var opts = opt_args || {};
+  var app = catalog_server.make_app();
+  var sqlite_path;
   if (opts.SQLITE_PATH) {
-    app.locals.config.SQLITE_PATH = opts.SQLITE_PATH;
+    sqlite_path = opts.SQLITE_PATH;
+  } else {
+    sqlite_path = app.locals.config.SQLITE_PATH;
   }
-  return models.lots_of_items();
+  return models.lots_of_items({
+    sqlite_path: sqlite_path
+  });
 };
 
 module.exports = exports;
-

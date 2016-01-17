@@ -8,9 +8,9 @@ var router = new require('../express_ext').Router();
 
 var SALT_LEN = 8;
 
+// set in register callback
 var client_url_path;
-
-var get_db = models.get_db;
+var get_db;
 
 /* make login required middleware
  * res_cb: callback fcn passed a res obj on unsuccessful login
@@ -187,6 +187,17 @@ router.on_register = function (app) {
     throw new Error("app.locals.client_url_path not string type");
   } else {
     client_url_path = app.locals.client_url_path;
+  }
+  if (app.locals.config.SQLITE_PATH) {
+    get_db = (function (sqlite_path) {
+      return function () {
+        return models.get_db({
+          sqlite_path: sqlite_path
+        });
+      };
+    }(app.locals.config.SQLITE_PATH));
+  } else {
+    throw new Error("sqlite path not defined in app config");
   }
 };
 

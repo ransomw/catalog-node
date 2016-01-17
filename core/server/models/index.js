@@ -40,8 +40,9 @@ module.exports.Item = _Item;
 module.exports.get_model = get_model;
 module.exports.get_db = db.get_db;
 
-module.exports.lots_of_items = function () {
-  var sqlize = db.get_db();
+module.exports.lots_of_items = function (opt_args) {
+  var opts = opt_args || {};
+  var sqlize = db.get_db(opts);
   var User = get_model(sqlize, _User);
   var Category = get_model(sqlize, _Category);
   var Item = get_model(sqlize, _Item);
