@@ -28,5 +28,10 @@ Q().then(function () {
   return capp.build_client(client, {cts: argv.c});
 }).then(function () {
   console.log("client build finished");
-  return capp.run_server(client);
+  return capp.run_server({CLIENT: client});
+}).then(function (res) {
+  console.log("server running on port " + res.port);
+}, function (err) {
+  console.log("error running app");
+  console.log(err);
 });

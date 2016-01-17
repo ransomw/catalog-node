@@ -2,11 +2,13 @@ var fs = require('fs');
 var fse = require('fs-extra');
 var Q = require('q');
 var path = require('path');
+var _ = require('lodash');
 var browserify = require('browserify');
 var watchify = require('watchify');
 var less = require('less');
 
 var app = require('./server');
+var models = require('./server/models'); // needs to be after app import
 var CONST = require('./common/const');
 
 // path for generated assets, todo: duplicated between here and template
@@ -125,13 +127,13 @@ var build_client_js = function (cts) {
   return write_bundle();
 };
 
+var exports = {};
 
 /* client - one of CONST.CLIENTS values
  * opts -
  *  cts: continuous build
  */
-module.exports.build_client = function (client, opt_args) {
-  // todo: XXX build ember client
+exports.build_client = function (client, opt_args) {
   var opts = opt_args || {};
   populate_client_static();
   if (opts.cts) {
@@ -146,11 +148,40 @@ module.exports.build_client = function (client, opt_args) {
   }
 };
 
-module.exports.run_server = function (client) {
-  var port = process.env.PORT || 3000;
+exports.run_server = function (config_arg, port_arg) {
+  var config = config_arg || {};
+  var port = port_arg || process.env.PORT || 3000;
   var server;
-  app.locals.config.CLIENT = client;
+  var deferred = Q.defer();
+  var unallowed_config = _.difference(
+    config,
+    ['SERVER', 'SQLITE_PATH']);
+  if (unallowed_config.length !== 0) {
+    throw new Error("unallowed config keys: " + unallowed_config);
+  }
+  _.merge(app.locals.config, _.omit(config, ['SQLITE_PATH']));
+  if (config.SQLITE_PATH &&
+      app.locals.config.SQLITE_PATH !== config.SQLITE_PATH) {
+    throw new Error(
+      "unexpected sqlite path.  got '" + config.SQLITE_PATH +
+        "' expected '" + app.locals.config.SQLITE_PATH);
+  }
   server = app.listen(port, function () {
-    console.log("app running on port " + port);
+    deferred.resolve({server: server, port: port});
   });
+  server.on('error', function (err) {
+    deferred.reject(err);
+  });
+  return deferred.promise;
 };
+
+exports.init_db = function (opt_args) {
+  var opts = opt_args || {};
+  if (opts.SQLITE_PATH) {
+    app.locals.config.SQLITE_PATH = opts.SQLITE_PATH;
+  }
+  return models.lots_of_items();
+};
+
+module.exports = exports;
+

@@ -6,12 +6,14 @@ var CONST = require('../const');
 var util = require('../util');
 var make_login_req_mw = require('./auth').make_login_req_mw;
 
+var get_db = models.get_db;
+
 // todo: support querying using comparisons... after integration tests
 //       like ?createdAt__gt=val in URL and other typical querying stuff
 //       like ordering and restricting to a particular count
 var make_models_endpoint = function (model_def) {
   return function (req, res) {
-    var model = models.get_model(models.get_db(), model_def);
+    var model = models.get_model(get_db(), model_def);
     var query_params = _.keys(req.query);
     var set_res = function (instances) {
       res.json(_.map(instances, function (instance) {
@@ -48,7 +50,7 @@ var api_login_req = make_login_req_mw(function (res) {
 /* create */
 var make_model_endpoint = function(model_def) {
   return function (req, res) {
-    models.get_model(models.get_db(), model_def)
+    models.get_model(get_db(), model_def)
       .create(req.body)
       .then(function (new_instance) {
         res.json({});
@@ -67,7 +69,7 @@ var make_instance_endpoint = function(model_def, action) {
       res.status(CONST.HTTP_RES_CODE.client_err)
         .json({error: "instance id must be a non-negative integer"});
     } else {
-      models.get_model(models.get_db(), model_def)
+      models.get_model(get_db(), model_def)
         .findById(instance_id)
         .then(function (instance) {
           if (instance === null) {

@@ -10,6 +10,8 @@ var SALT_LEN = 8;
 
 var client_url_path;
 
+var get_db = models.get_db;
+
 /* make login required middleware
  * res_cb: callback fcn passed a res obj on unsuccessful login
  */
@@ -25,7 +27,7 @@ var make_login_req_mw = function (res_cb) {
 
 var handle_sign_in = function (req, res) {
   var user_promise = Q().then(function () {
-    return models.get_model(models.get_db(), models.User)
+    return models.get_model(get_db(), models.User)
       .findOne({where: {email: req.body.email}});
   });
   var login_res_promise = user_promise.then(function (user) {
@@ -83,14 +85,14 @@ var handle_sign_up_pass_matched = function (req, res) {
     return deferred.promise;
   });
   var user_promise = Q().then(function () {
-    return models.get_model(models.get_db(), models.User)
+    return models.get_model(get_db(), models.User)
       .findOne({where: {email: req.body.email}});
   });
   var create_user_promise = Q.all(
     [password_hash_promise,
      user_promise]).spread(function (password_hash, user) {
        if (user === null) {
-         return models.get_model(models.get_db(), models.User)
+         return models.get_model(get_db(), models.User)
            .create({
              name: req.body.name,
              email: req.body.email,
@@ -162,7 +164,7 @@ router.get(CONST.AUTH_ENDPOINTS.logout, function (req, res) {
 
 router.get(CONST.AUTH_ENDPOINTS.user, function (req, res) {
   if (req.session.user_id) {
-    models.get_model(models.get_db(), models.User)
+    models.get_model(get_db(), models.User)
       .findById(req.session.user_id)
       .then(function (user) {
         if (user === null) {

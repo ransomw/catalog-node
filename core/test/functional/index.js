@@ -15,10 +15,11 @@ var cpages = require(path.join(TEST_DIR, 'client_pages'));
 var CONST = require(path.join(TEST_DIR, 'const'));
 var util = require(path.join(TEST_DIR, 'util'));
 var PROJ_ROOT = path.join(TEST_DIR, '../../..');
-var app = require(PROJ_ROOT + '/core/server');
-var init_db = require(PROJ_ROOT + '/core/server/models').lots_of_items;
+var app = require(PROJ_ROOT + '/core');
+/* chrome driver config */
 var CD_PATH = config.CD_PATH;
 var CD_PORT = config.CD_PORT;
+/* app config */
 var APP_PORT = process.env.PORT || 3001;
 var APP_URL = 'http://localhost';
 
@@ -125,18 +126,17 @@ describe("functional tests", function() {
   // todo: (?) app/server per-request setup/teardown
   var _before_test_case = function () {
     db_file = tmp.fileSync();
-    app.locals.config.SQLITE_PATH = db_file.name;
-    // todo: double-check args for .done() cb out of db api
     return Q().then(function() {
-      return init_db();
-    }).then(function () {
-      var deferred = Q.defer();
-      app.locals.config.CLIENT = argv.f;
-      server = app.listen(APP_PORT, function () {
-        deferred.resolve();
+      return app.init_db({
+        SQLITE_PATH: db_file.name
       });
-      return deferred.promise;
     }).then(function () {
+      return app.run_server({
+        CLIENT: argv.f,
+        SQLITE_PATH: db_file.name
+      }, APP_PORT);
+    }).then(function (res) {
+      server = res.server;
       return client.init();
     });
   };

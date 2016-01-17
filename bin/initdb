@@ -1,0 +1,6 @@
+// -*-js2-*-
+
+var app = require('../core');
+
+app.init_db().done();
+
