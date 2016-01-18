@@ -16,6 +16,12 @@ var argv = require('yargs')
           type: 'string',
           choices: _.values(CONST.CLIENTS),
           default: CONST.CLIENTS.ANGULAR
+        },
+        'p': {
+          desc: "persistance type",
+          type: 'string',
+          choices: _.values(capp.CONST.PERSISTANCE_TYPES),
+          default: capp.CONST.DEFAULTS.PERSISTANCE_TYPE
         }
       })
       .argv;
@@ -28,7 +34,10 @@ Q().then(function () {
   return capp.build_client(client, {cts: argv.c});
 }).then(function () {
   console.log("client build finished");
-  return capp.run_server({CLIENT: client});
+  return capp.run_server({
+    PERSISTANCE_TYPE: argv.p,
+    CLIENT: client
+  });
 }).then(function (res) {
   console.log("server running on port " + res.port);
 }, function (err) {

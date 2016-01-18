@@ -1,7 +1,7 @@
 var _ = require('lodash');
 var Sqlize = require('sequelize');
 var router = require('../express_ext').Router();
-var models = require('../models');
+var Models = require('../models');
 var CONST = require('../const');
 var util = require('../util');
 var make_login_req_mw = require('./auth').make_login_req_mw;
@@ -10,6 +10,7 @@ var API_ENDPOINTS = CONST.API_ENDPOINTS;
 
 // set in register callback
 var get_db;
+var models;
 
 // todo: support querying using comparisons... after integration tests
 //       like ?createdAt__gt=val in URL and other typical querying stuff
@@ -129,17 +130,24 @@ var register_endpoints = function () {
 };
 
 router.on_register = function (app) {
-  if (app.locals.config.SQLITE_PATH) {
-    get_db = (function (sqlite_path) {
-      return function () {
-        return models.get_db({
-          sqlite_path: sqlite_path
-        });
-      };
-    }(app.locals.config.SQLITE_PATH));
-  } else {
+  // todo: duplicate code w/ auth.js
+  if (!app.locals.config.PERSISTANCE_TYPE) {
+    throw new Error("persistance type not defined in app config");
+  }
+  models = (function (p_type) {
+    return new Models(p_type);
+  }(app.locals.config.PERSISTANCE_TYPE));
+  if (!app.locals.config.SQLITE_PATH) {
     throw new Error("sqlite path not defined in app config");
   }
+  get_db = (function (sqlite_path) {
+    return function () {
+      return models.get_db({
+        sqlite_path: sqlite_path
+      });
+    };
+  }(app.locals.config.SQLITE_PATH));
+  //
   register_endpoints();
 };
 

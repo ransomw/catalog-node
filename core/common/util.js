@@ -11,7 +11,9 @@ var deepFreeze = function (obj) {
   return Object.freeze(obj);
 };
 
-module.exports.arr_elem = function(arr) {
+var exports = {};
+
+exports.arr_elem = function(arr) {
   assert(Array.isArray(arr),
             "arr_elem expects array argument");
   assert.equal(arr.length, 1,
@@ -19,5 +21,7 @@ module.exports.arr_elem = function(arr) {
   return arr[0];
 };
 
-// module.exports.freeze = deepFreeze;
-module.exports.freeze = require('deep-freeze');
+// exports.freeze = deepFreeze;
+exports.freeze = require('deep-freeze');
+
+module.exports = exports;

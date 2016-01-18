@@ -1,7 +1,7 @@
 var _ = require('lodash');
 var Q = require('q');
 var bcrypt = require('bcrypt');
-var models = require('../models');
+var Models = require('../models');
 var CONST = require('../const');
 var util = require('../util');
 var router = new require('../express_ext').Router();
@@ -11,6 +11,7 @@ var SALT_LEN = 8;
 // set in register callback
 var client_url_path;
 var get_db;
+var models;
 
 /* make login required middleware
  * res_cb: callback fcn passed a res obj on unsuccessful login
@@ -185,20 +186,25 @@ router.on_register = function (app) {
                     "'client_url_path' in locals");
   } else if (typeof app.locals.client_url_path !== 'string') {
     throw new Error("app.locals.client_url_path not string type");
-  } else {
-    client_url_path = app.locals.client_url_path;
   }
-  if (app.locals.config.SQLITE_PATH) {
-    get_db = (function (sqlite_path) {
-      return function () {
-        return models.get_db({
-          sqlite_path: sqlite_path
-        });
-      };
-    }(app.locals.config.SQLITE_PATH));
-  } else {
+  client_url_path = app.locals.client_url_path;
+  // todo: duplicate code w/ api.js
+  if (!app.locals.config.PERSISTANCE_TYPE) {
+    throw new Error("persistance type not defined in app config");
+  }
+  models = (function (p_type) {
+    return new Models(p_type);
+  }(app.locals.config.PERSISTANCE_TYPE));
+  if (!app.locals.config.SQLITE_PATH) {
     throw new Error("sqlite path not defined in app config");
   }
+  get_db = (function (sqlite_path) {
+    return function () {
+      return models.get_db({
+        sqlite_path: sqlite_path
+      });
+    };
+  }(app.locals.config.SQLITE_PATH));
 };
 
 module.exports.router = router;

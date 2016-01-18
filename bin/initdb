@@ -1,8 +1,22 @@
 // -*-js2-*-
 
+var _ = require('lodash');
 var app = require('../core');
 
-app.init_db().then(function () {
+var argv = require('yargs')
+      .options({
+        'p': {
+          desc: "persistance type",
+          type: 'string',
+          choices: _.values(app.CONST.PERSISTANCE_TYPES),
+          default: app.CONST.DEFAULTS.PERSISTANCE_TYPE
+        }
+      })
+      .argv;
+
+app.init_db({
+  PERSISTANCE_TYPE: argv.p
+}).then(function () {
   console.log("initialized database");
 }, function (err) {
   console.log("database init error");

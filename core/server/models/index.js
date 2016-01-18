@@ -1,18 +1,11 @@
 var Q = require('q');
 var _ = require('lodash');
 
-var db = require('./db');
-
-var _User = require('./user');
-var _Category = require('./category');
-var _Item = require('./item');
+var iface_sequelize = require('./sequelize');
 
 var items_data = require('./lots_of_items.json');
 
-// not certain what the "right" level of abstraction is:
-// can database connections live outside an app?
-// a specific use-case might help decoupling...
-// ...maybe a cli to the database?
+var CONST = require('./const');
 
 // https://github.com/sequelize/sequelize/issues/931
 var get_model = function(db_conn, model_def) {
@@ -34,18 +27,35 @@ var get_model = function(db_conn, model_def) {
  * .get('field')
  */
 
-module.exports.User = _User;
-module.exports.Category = _Category;
-module.exports.Item = _Item;
-module.exports.get_model = get_model;
-module.exports.get_db = db.get_db;
+/*
+ * p_type: persistance type
+ */
+var Models = function (p_type) {
+  if (_.values(CONST.PERSISTANCE_TYPES).indexOf(p_type) === -1) {
+    throw new Error("unknown persistance type '" + p_type + "'");
+  }
+  if (p_type !== CONST.PERSISTANCE_TYPES.SEQUELIZE) {
+    throw new Error("only sequlize persistance is supported");
+  }
+  // todo: check interface keys with a set equality utility function
+  _.merge(this, iface_sequelize);
+  this.get_model = get_model;
+};
 
-module.exports.lots_of_items = function (opt_args) {
+// var exports = {};
+
+// // todo: check interface keys with a set equality utility function
+// _.merge(exports, iface_sequelize);
+
+// exports.get_model = get_model;
+
+Models.prototype.lots_of_items = function (opt_args) {
+  var self = this;
   var opts = opt_args || {};
-  var sqlize = db.get_db(opts);
-  var User = get_model(sqlize, _User);
-  var Category = get_model(sqlize, _Category);
-  var Item = get_model(sqlize, _Item);
+  var db_inst = self.get_db(opts);
+  var User = get_model(db_inst, self.User);
+  var Category = get_model(db_inst, self.Category);
+  var Item = get_model(db_inst, self.Item);
 
   var make_make_p_item = function (cat_id) {
     return function (item_data) {
@@ -69,7 +79,9 @@ module.exports.lots_of_items = function (opt_args) {
     });
   };
 
-  return sqlize.sync({force: true}).then(function () {
+  return db_inst.sync({force: true}).then(function () {
     return Q.all(items_data.map(make_p_cat));
   });
 };
+
+module.exports = Models;

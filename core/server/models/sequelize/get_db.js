@@ -33,8 +33,4 @@ var get_db = function (opt_args) {
   return db_state.conn;
 };
 
-var exports = {};
-
-exports.get_db = get_db;
-
-module.exports = exports;
+module.exports = get_db;
