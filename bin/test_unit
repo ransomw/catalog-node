@@ -1,0 +1,8 @@
+// -*-js2-*-
+
+require('../core/test/unit').run_tests().then(function () {
+  console.log("unit tests finished");
+}, function (err) {
+  console.log("unit test error");
+  console.log(err);
+});
