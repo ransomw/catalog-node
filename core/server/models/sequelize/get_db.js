@@ -1,4 +1,3 @@
-var _ = require('lodash');
 var Sqlize = require('sequelize');
 
 // consider managing multiple database connections in this module

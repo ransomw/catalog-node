@@ -1,18 +1,40 @@
+/*global require, module */
 var Q = require('q');
 var _ = require('lodash');
 
 var iface_sequelize = require('./sequelize');
+var iface_bookshelf = require('./bookshelf');
 
 var items_data = require('./lots_of_items.json');
 
 var CONST = require('./const');
 
 // https://github.com/sequelize/sequelize/issues/931
-var get_model = function(db_conn, model_def) {
+var get_sequlize_model = function(db_conn, model_def) {
   // freezeTableName: true prevents initdb error
   model_def[2] = _.merge(model_def[2] || {},
                          {freezeTableName: true});
   return db_conn.define.apply(db_conn, model_def);
+};
+
+// db_conn: a bookshelf instance
+var get_bookshelf_model = function(db_conn, model_def) {
+  const models = iface_bookshelf.models;
+  var base_model;
+  if (model_def.extends) {
+    if (typeof model_def.extends !== 'string') {
+    throw new Error("expected bookshelf model_def.extends " +
+                    "to be a string if present");
+    }
+    if (typeof models[model_def.extends] === 'undefined') {
+      throw new Error("'" + model_def.extends + "' model " +
+                      "definition not found");
+    }
+    base_model = get_bookshelf_model(
+      db_conn, models[model_def.extends]);
+    return base_model.extend.apply(base_model, model_def.bookshelf);
+  }
+  return db_conn.Model.extend.apply(db_conn.Model, model_def.bookshelf);
 };
 
 /* exposed model api
@@ -34,12 +56,23 @@ var Models = function (p_type) {
   if (_.values(CONST.PERSISTANCE_TYPES).indexOf(p_type) === -1) {
     throw new Error("unknown persistance type '" + p_type + "'");
   }
-  if (p_type !== CONST.PERSISTANCE_TYPES.SEQUELIZE) {
-    throw new Error("only sequlize persistance is supported");
+  if (p_type === CONST.PERSISTANCE_TYPES.SEQUELIZE) {
+    // todo: check interface keys with a set equality utility function
+    _.merge(this, iface_sequelize);
+    this.get_model = get_sequlize_model;
+  } else if (p_type === CONST.PERSISTANCE_TYPES.BOOKSHELF) {
+    _.merge(this,
+            _.pick(iface_bookshelf, ['get_db']),
+            _.pick(iface_bookshelf.models, [
+              'User',
+              'Category',
+              'Item'
+            ])
+           );
+    this.get_model = get_bookshelf_model;
+  } else {
+    throw new Error("unimplemented persistance type '" + p_type + "'");
   }
-  // todo: check interface keys with a set equality utility function
-  _.merge(this, iface_sequelize);
-  this.get_model = get_model;
 };
 
 // var exports = {};
@@ -53,9 +86,9 @@ Models.prototype.lots_of_items = function (opt_args) {
   var self = this;
   var opts = opt_args || {};
   var db_inst = self.get_db(opts);
-  var User = get_model(db_inst, self.User);
-  var Category = get_model(db_inst, self.Category);
-  var Item = get_model(db_inst, self.Item);
+  var User = self.get_model(db_inst, self.User);
+  var Category = self.get_model(db_inst, self.Category);
+  var Item = self.get_model(db_inst, self.Item);
 
   var make_make_p_item = function (cat_id) {
     return function (item_data) {
@@ -79,7 +112,9 @@ Models.prototype.lots_of_items = function (opt_args) {
     });
   };
 
-  return db_inst.sync({force: true}).then(function () {
+  return Q().then(function () {
+    return db_inst.sync({force: true});
+  }).then(function () {
     return Q.all(items_data.map(make_p_cat));
   });
 };

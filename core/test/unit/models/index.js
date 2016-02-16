@@ -1,3 +1,4 @@
+/*global require, module */
 var fs = require('fs');
 
 var _ = require('lodash');
@@ -37,6 +38,7 @@ var models_test = function (models, t) {
   t.ok(models.Category, "has category model not found");
   t.ok(models.Item, "has item model");
   t.equal(typeof models.get_db, 'function', "has get_db function");
+  t.equal(typeof models.get_model, 'function', "has get_model function");
   get_db = (function (sqlite_path) {
     return function () {
       return models.get_db({
@@ -59,8 +61,10 @@ var models_test = function (models, t) {
   });
 
   var test_user_p = Q.all([init_db_p]).then(function () {
-    return models.get_model(get_db(), models.User)
-      .findOne({where: {email: TEST_DATA.USER_EMAIL}});
+    var user_model = models.get_model(get_db(), models.User);
+    t.equal(typeof user_model.findOne, 'function',
+            "user model has findOne function");
+    return user_model.findOne({where: {email: TEST_DATA.USER_EMAIL}});
   }).then(function (no_user_res) {
     t.equal(no_user_res, null,
             "returns null on no user model found");
@@ -96,7 +100,10 @@ var models_test = function (models, t) {
     t.ok(user_id, "user id prop exists");
     return user_id;
   }).then(function (user_id) {
-    return models.get_model(get_db(), models.User).findById(user_id);
+    var user_model = models.get_model(get_db(), models.User);
+    t.equal(typeof user_model.findById, 'function',
+            "user model has findById function");
+    return user_model.findById(user_id);
   }).then(function (user) {
     var user_json;
     t.ok(user, "got defined result for user lookup by id");
@@ -278,7 +285,11 @@ var make_models_test = function (p_type) {
 };
 
 module.exports = function (t) {
-  _.values(PERSISTANCE_TYPES).forEach(function (p_type) {
+  _.values(
+    PERSISTANCE_TYPES
+    // _.pick(PERSISTANCE_TYPES, ['BOOKSHELF'])
+    // _.pick(PERSISTANCE_TYPES, ['SEQUELIZE'])
+  ).forEach(function (p_type) {
     t.test(p_type, make_models_test(p_type));
   });
 };
