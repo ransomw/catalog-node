@@ -52,12 +52,15 @@ var models_test = function (models, t) {
       sqlite_path: db_file.name
     });
   }).then(function () {
+    var category_model = models.get_model(get_db(), models.Category);
     t.ok(models.get_model(get_db(), models.User),
          "gets user model");
-    t.ok(models.get_model(get_db(), models.Category),
-         "gets category model");
     t.ok(models.get_model(get_db(), models.Item),
          "gets item model");
+    t.ok(category_model, "gets category model");
+    t.ok(category_model.tableAttributes,
+         "category model has tableAttributes");
+
   });
 
   var test_user_p = Q.all([init_db_p]).then(function () {

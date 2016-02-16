@@ -1,3 +1,5 @@
+/*global require, global, process,
+ describe, before, after, beforeEach, afterEach, it */
 var execFile = require('child_process').execFile;
 var webdriverio = require('webdriverio');
 var path = require('path');
@@ -128,10 +130,12 @@ describe("functional tests", function() {
     db_file = tmp.fileSync();
     return Q().then(function() {
       return app.init_db({
+        PERSISTANCE_TYPE: argv.p,
         SQLITE_PATH: db_file.name
       });
     }).then(function () {
       return app.run_server({
+        PERSISTANCE_TYPE: argv.p,
         CLIENT: argv.f,
         SQLITE_PATH: db_file.name
       }, APP_PORT);

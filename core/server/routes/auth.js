@@ -1,3 +1,4 @@
+/*global require, module */
 var _ = require('lodash');
 var Q = require('q');
 var bcrypt = require('bcrypt');
@@ -207,5 +208,9 @@ router.on_register = function (app) {
   }(app.locals.config.SQLITE_PATH));
 };
 
-module.exports.router = router;
-module.exports.make_login_req_mw = make_login_req_mw;
+var exports = {};
+
+exports.router = router;
+exports.make_login_req_mw = make_login_req_mw;
+
+module.exports = exports;

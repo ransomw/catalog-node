@@ -1,23 +1,31 @@
-var _ = require('lodash');
-var Sqlize = require('sequelize');
-var router = require('../express_ext').Router();
-var Models = require('../models');
-var CONST = require('../const');
-var util = require('../util');
-var make_login_req_mw = require('./auth').make_login_req_mw;
+/*global require, module */
+const _ = require('lodash');
+const Sqlize = require('sequelize');
+const Router = require('../express_ext').Router;
+const Models = require('../models');
+const CONST = require('../const');
+const util = require('../util');
+const make_login_req_mw = require('./auth').make_login_req_mw;
 
-var API_ENDPOINTS = CONST.API_ENDPOINTS;
+const API_ENDPOINTS = CONST.API_ENDPOINTS;
 
 // set in register callback
+var router;
 var get_db;
 var models;
+
+const make_router = function () {
+  router = Router();
+  router.on_register = on_register_router;
+  return router;
+};
 
 // todo: support querying using comparisons... after integration tests
 //       like ?createdAt__gt=val in URL and other typical querying stuff
 //       like ordering and restricting to a particular count
 var make_models_endpoint = function (model_def) {
+  var model = models.get_model(get_db(), model_def);
   return function (req, res) {
-    var model = models.get_model(get_db(), model_def);
     var query_params = _.keys(req.query);
     var set_res = function (instances) {
       res.json(_.map(instances, function (instance) {
@@ -129,7 +137,7 @@ var register_endpoints = function () {
                 }));
 };
 
-router.on_register = function (app) {
+const on_register_router = function (app) {
   // todo: duplicate code w/ auth.js
   if (!app.locals.config.PERSISTANCE_TYPE) {
     throw new Error("persistance type not defined in app config");
@@ -151,4 +159,8 @@ router.on_register = function (app) {
   register_endpoints();
 };
 
-module.exports = router;
+var exports = {};
+
+exports.make_router = make_router;
+
+module.exports = exports;

@@ -1,3 +1,4 @@
+/*global require, process, module */
 var path = require('path');
 var _ = require('lodash');
 var session = require('express-session');

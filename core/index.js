@@ -1,3 +1,4 @@
+/*global require, process, module */
 var Q = require('q');
 var _ = require('lodash');
 var freeze = require('deep-freeze');

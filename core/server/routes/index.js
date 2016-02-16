@@ -1,3 +1,4 @@
+/*global require, module */
 var CONST = require('../const');
 var auth = require('./auth').router;
 var api = require('./api');
@@ -21,7 +22,7 @@ var register_routes = function (app) {
   });
 
   app.register_router(CONST.AUTH_BASE, auth);
-  app.register_router(CONST.API_BASE, api);
+  app.register_router(CONST.API_BASE, api.make_router());
 };
 
 var exports = {};

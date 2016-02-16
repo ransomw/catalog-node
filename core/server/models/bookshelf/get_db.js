@@ -32,6 +32,16 @@ const _make_sync = function (knex_inst) {
       return Q.all(drop_table_promises);
     };
 
+    const apply_schema = function (table, col_defs) {
+      _.mapKeys(function (col_def, col_name) {
+        var fn_add_col = table[col_def.type];
+        if (typeof fn_add_col !== 'function') {
+          throw new Error("unexpected column type '" +
+                          col_def.type + "'");
+        }
+      });
+    };
+
     const create_tables = function () {
       return Q().then(function () {
         return knex_inst.schema
