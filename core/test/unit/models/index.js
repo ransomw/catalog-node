@@ -60,7 +60,11 @@ var models_test = function (models, t) {
     t.ok(category_model, "gets category model");
     t.ok(category_model.tableAttributes,
          "category model has tableAttributes");
-
+    var missing_keys = _.difference(
+      ['name'],
+      _.keys(category_model.tableAttributes));
+    t.deepEqual(missing_keys, [],
+                "category model tableAttributes has expected keys");
   });
 
   var test_user_p = Q.all([init_db_p]).then(function () {

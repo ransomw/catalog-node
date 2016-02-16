@@ -5,6 +5,8 @@ const _ = require('lodash');
 const knex = require('knex');
 const bookshelf = require('bookshelf');
 
+const schema = require('./schema');
+
 const db_state = {
   sqlite_path: undefined,
   conn: undefined
@@ -33,11 +35,28 @@ const _make_sync = function (knex_inst) {
     };
 
     const apply_schema = function (table, col_defs) {
-      _.mapKeys(function (col_def, col_name) {
+      _.mapKeys(col_defs, function (col_def, col_name) {
         var fn_add_col = table[col_def.type];
+        var type_args = col_def.type_args || [];
+        var chainable;
         if (typeof fn_add_col !== 'function') {
           throw new Error("unexpected column type '" +
                           col_def.type + "'");
+        }
+        chainable = fn_add_col.apply(
+          table,
+          [col_name].concat(type_args));
+        if (col_def.references) {
+          chainable = chainable.references(col_def.references);
+        }
+        // note that undefined indicates false for nullable and unique
+        if (col_def.nullable) {
+          chainable = chainable.nullable();
+        } else {
+          chainable = chainable.notNullable();
+        }
+        if (col_def.unique) {
+          chainable = chainable.unique();
         }
       });
     };
@@ -47,28 +66,20 @@ const _make_sync = function (knex_inst) {
         return knex_inst.schema
           .createTable('users', function (table) {
             table.increments('id').primary();
-            table.string('name', 250).notNullable();
-            table.string('email', 250).notNullable().unique();
-            table.string('password', 500).nullable();
+            apply_schema(table, schema.users);
           });
       }).then(function () {
         return knex_inst.schema
           .createTable('categories', function (table) {
             table.increments('id').primary();
             // TODO: validation: category name may not be 'item'
-            table.string('name', 80).notNullable().unique();
+            apply_schema(table, schema.categories);
           });
       }).then(function () {
         return knex_inst.schema
           .createTable('items', function (table) {
             table.increments('id').primary();
-            table.string('title', 80).notNullable().unique();
-            table.string('description', 250).notNullable();
-            table.integer('category_id')
-              .references('categories.id')
-              .notNullable();
-            table.integer('user_id')
-              .references('users.id');
+            apply_schema(table, schema.items);
           });
       });
     };

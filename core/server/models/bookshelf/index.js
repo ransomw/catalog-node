@@ -1,6 +1,6 @@
 /*global require, module */
 const base = require('./base');
-
+const schema = require('./schema');
 
 const models = Object.freeze({
   Base: {
@@ -10,20 +10,26 @@ const models = Object.freeze({
     extends: 'Base',
     bookshelf: [{
       tableName: 'users'
-    }, {}]
+    }, {
+      tableAttributes: schema.users
+    }]
 
   },
   Category: {
     extends: 'Base',
     bookshelf: [{
       tableName: 'categories'
-    }, {}]
+    }, {
+      tableAttributes: schema.categories
+    }]
   },
   Item: {
     extends: 'Base',
     bookshelf: [{
       tableName: 'items'
-    }, {}]
+    }, {
+      tableAttributes: schema.items
+    }]
   }
 });
 
